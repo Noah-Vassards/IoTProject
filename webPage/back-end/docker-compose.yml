@@ -1,0 +1,12 @@
+version: '3.3'
+
+services:
+  development:
+    image: postgres:15
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: bacchus-user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bacchus-dev
+      POSTGRES_HOST_AUTH_METHOD: trust

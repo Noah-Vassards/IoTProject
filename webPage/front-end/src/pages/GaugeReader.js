@@ -1,13 +1,7 @@
+import { Gauge } from '@mui/x-charts/Gauge';
 import React from 'react';
-import { Gauge, gaugeClasses } from '@mui/x-charts/Gauge';
 
-export default function GaugeReader({ height, width, value, sections, format }) {
-
-    const setGaugeColor = () => {
-        if (value < sections[0] || value > sections[1]) return 'red'
-        return 'green'
-    }
-
+export default function GaugeReader({ height, width, value, format }) {
     return (
         <div style={{ width: width, height: height, position: 'relative' }}>
             <Gauge
@@ -18,11 +12,6 @@ export default function GaugeReader({ height, width, value, sections, format }) 
                 startAngle={-90}
                 endAngle={90}
                 text=''
-                sx={() => ({
-                    [`& .${gaugeClasses.valueArc}`]: {
-                        fill: setGaugeColor(),
-                      }
-                })}
             />
             <div
                 style={{

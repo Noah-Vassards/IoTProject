@@ -25,7 +25,6 @@ export default function Login() {
 
             if (response.ok) {
                 const data = await response.json()
-                console.log(data)
                 localStorage.setItem('userId', data.user.id)
                 navigate('/');
             } else {

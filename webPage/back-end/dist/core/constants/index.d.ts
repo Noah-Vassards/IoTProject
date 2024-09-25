@@ -1,9 +1,0 @@
-export declare const SEQUELIZE = "SEQUELIZE";
-export declare const DEVELOPMENT = "development";
-export declare const TEST = "test";
-export declare const PRODUCTION = "production";
-export declare const USER_REPOSITORY = "USER_REPOSITORY";
-export declare const TOKEN_REPOSITORY = "TOKEN_REPOSITORY";
-export declare const COMPONENT_REPOSITORY = "COMPONENT_REPOSITORY";
-export declare const ALARM_REPOSITORY = "ALARM_REPOSITORY";
-export declare const DIALECT = "postgres";

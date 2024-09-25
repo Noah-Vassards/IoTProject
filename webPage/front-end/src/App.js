@@ -4,6 +4,7 @@ import Signup from './pages/authentication/signup';
 import Home from './pages/Home';
 import ComponentStats from './pages/ComponentStats';
 import HumidityGauge from './pages/GaugeReader';
+import AlarmStats from './pages/AlarmStats';
 
 function App() {
   return (
@@ -12,7 +13,8 @@ function App() {
         <Route path='/' element={<Home />}/>
         <Route path='/login' element={<Login />}/>
         <Route path='/signup' element={<Signup />}/>
-        <Route path='/config' element={<ComponentStats />}/>
+        <Route path='/componentConfig' element={<ComponentStats />}/>
+        <Route path='/alarmConfig' element={<AlarmStats />}/>
         <Route path='/test' element={<HumidityGauge />}/>
       </Routes>
     </>

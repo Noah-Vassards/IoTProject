@@ -1,5 +1,6 @@
-import { BelongsTo, Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, ForeignKey, HasMany, Model, Table } from 'sequelize-typescript';
 import { User } from '../users/users.entity';
+import { Alarm } from '../alarms/alarm.entity';
 
 @Table
 export class Component extends Model<Component> {
@@ -14,42 +15,21 @@ export class Component extends Model<Component> {
         allowNull: false,
         defaultValue: "Nouveau Capteur"
     })
-    name?: string
+    name: string
 
     @Column({
-        type: DataType.INTEGER,
+        type: DataType.JSONB,
         allowNull: false,
-        defaultValue: 0
+        defaultValue: []
     })
-    temperature?: number
-
-    @Column({
-        type: DataType.INTEGER,
-        allowNull: false,
-        defaultValue: 0
-    })
-    humidity?: number
-
-    @Column({
-        type: DataType.ARRAY(DataType.INTEGER),
-        allowNull: false,
-        defaultValue: [0, 100]
-    })
-    humidityRange?: number[]
-
-    @Column({
-        type: DataType.ARRAY(DataType.INTEGER),
-        allowNull: false,
-        defaultValue: [0, 100]
-    })
-    temperatureRange?: number[]
+    data: {date: Date, temperature: number, humidity: number}[]
 
     @ForeignKey(() => User)
     @Column({
         type: DataType.INTEGER,
         allowNull: false
     })
-    userId?: number;
+    userId: number;
 
     @BelongsTo(() => User)
     user: User

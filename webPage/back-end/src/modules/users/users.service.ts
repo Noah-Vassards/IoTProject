@@ -6,6 +6,9 @@ import { User } from './users.entity';
 import { Component } from '../components/component.entity';
 import { CreateComponentDto } from '../components/dto/createComponent.dto';
 import { ComponentsService } from '../components/components.service';
+import { CreateAlarmDto } from '../alarms/dto/createAlarm.dto';
+import { AlarmsService } from '../alarms/alarm.service';
+import { Alarm } from '../alarms/alarm.entity';
 
 /**
  * Service responsible for managing users.
@@ -21,7 +24,8 @@ export class UsersService {
     constructor(
         @Inject(USER_REPOSITORY) private readonly userRepository: typeof User,
         private readonly tokenService: TokenService,
-        private readonly componentService: ComponentsService
+        private readonly componentService: ComponentsService,
+        private readonly alarmService: AlarmsService
     ) { }
 
     /**
@@ -74,7 +78,32 @@ export class UsersService {
     async findAllComponents(id: number): Promise<Component[]> {
         const user = await this.userRepository.findOne<User>({ where: { id }, include: Component })
 
+        if (!user) {
+            throw new BadRequestException('User not found')
+        }
+
         return user.components
+    }
+
+    async registerAlarm(id: number, createAlarmDto: CreateAlarmDto): Promise<User> {
+        const user = await this.userRepository.findOne<User>({ where: { id }, include: Alarm });
+        if (!user) {
+            throw new BadRequestException('User is unknown')
+        }
+        const alarm = await this.alarmService.create(createAlarmDto, id);
+
+        user.alarms.push(alarm)
+        return user.save()
+    }
+
+    async findAllAlarms(id: number): Promise<Alarm[]> {
+        const user = await this.userRepository.findOne<User>({ where: { id }, include: Alarm })
+
+        if (!user) {
+            throw new BadRequestException('User not found')
+        }
+
+        return user.alarms
     }
 
     /**

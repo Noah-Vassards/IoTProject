@@ -5,6 +5,8 @@ import { Component } from "../components/component.entity";
 import { User } from "./users.entity";
 import { CreateComponentDto } from "../components/dto/createComponent.dto";
 import { IsAutenticated } from "src/core/guards/isAuthenticated.guards";
+import { CreateAlarmDto } from "../alarms/dto/createAlarm.dto";
+import { Alarm } from "../alarms/alarm.entity";
 
 @Controller('users')
 export class UsersController {
@@ -33,5 +35,15 @@ export class UsersController {
     @Get(':id/components')
     async getAllComponents(@Param('id') userId: number): Promise<Component[]> {
         return await this.usersService.findAllComponents(userId);
+    }
+
+    @Post(':id/alarms')
+    async registerAlarm(@Param('id') userId: number, @Body() createAlarmDto: CreateAlarmDto): Promise<User> {
+        return await this.usersService.registerAlarm(userId, createAlarmDto)
+    }
+
+    @Get(':id/alarms')
+    async getAllAlarms(@Param('id') userId: number): Promise<Alarm[]> {
+        return await this.usersService.findAllAlarms(userId);
     }
 }

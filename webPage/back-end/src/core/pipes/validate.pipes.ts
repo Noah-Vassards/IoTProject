@@ -18,6 +18,7 @@ export class ValidateInputPipe extends ValidationPipe {
         return await super.transform(value, metadata);
       } catch (e) {
          if (e instanceof BadRequestException) {
+            console.log(e.message)
             throw new CustomBadRequestException(this.handleError("Bad user credentials"));
          }
          throw e;

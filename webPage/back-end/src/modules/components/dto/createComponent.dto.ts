@@ -1,16 +1,12 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional } from "class-validator";
 
 export class CreateComponentDto {
     @IsNotEmpty()
     readonly uuid: string;
 
+    @IsOptional()
     readonly name: string;
 
-    readonly temperature: number;
-
-    readonly humidity: number;
-
-    readonly temperatureRange: number[];
-
-    readonly humidityRange: number[];
+    @IsOptional()
+    readonly data: {date: Date, temperature: number, humidity: number}
 }

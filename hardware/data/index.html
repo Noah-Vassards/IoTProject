@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Bacchus</title>
+    <link rel="stylesheet" href="Authentication.css">
+    <link rel="stylesheet" href="../../Common.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Bacchus</h1>
+        <div id="error-message" style="color: red; display: none;"></div>
+        <div class="login-box">
+            <div class="login-box-header">
+                <p>Connexion</p>
+            </div>
+            <div class="form">
+                <input
+                    placeholder="Nom d'utilisateur"
+                    type="email"
+                    name="email"
+                    id="email"
+                >
+                <input
+                    placeholder="Mot de passe"
+                    type="password"
+                    name="password"
+                    id="password"
+                >
+                <input
+                    type="submit"
+                    value="Se connecter"
+                    id="submit-button"
+                >
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const submitButton = document.getElementById('submit-button');
+            const errorMessage = document.getElementById('error-message');
+
+            function isFormOK() {
+                return emailInput.value.trim().length === 0 || passwordInput.value.trim().length === 0;
+            }
+
+            function updateSubmitButton() {
+                submitButton.disabled = isFormOK();
+            }
+
+            emailInput.addEventListener('input', updateSubmitButton);
+            passwordInput.addEventListener('input', updateSubmitButton);
+
+            submitButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Login attempt with:', emailInput.value, passwordInput.value);
+                errorMessage.textContent = 'Login functionality not implemented in this HTML version.';
+                errorMessage.style.display = 'block';
+            });
+        });
+    </script>
+</body>
+</html>

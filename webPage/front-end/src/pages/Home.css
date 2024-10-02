@@ -2,6 +2,47 @@
     background-color: #dbdbdb;
 }
 
+.modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 300px;
+    width: 500px;
+    background-color: white;
+    border: 1px solid rgba(204, 204, 204, 0.6);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    box-shadow: 10px 10px 10px 0 rgba(0, 0, 0, 0.3);
+}
+
+.modal > input {
+    font-size: larger;
+}
+
+.modal > button {
+    position: absolute;
+    bottom: 50px;
+    font-size: large;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #dbdbdb;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.3);
+}
+
+.modal > button:disabled {
+    cursor: default;
+}
+
+.modal > button:hover:not(:disabled) {
+    box-shadow: -1px -1px 0px 1px rgba(0, 0, 0, 0.3);
+}
+
 .header {
     height: 15vh;
     width: 100%;
@@ -43,11 +84,28 @@
 
 .grid-header {
     display: flex;
+    position: relative;
 }
 
 .grid-header {
     margin: 10px;
     font-size: larger;
+}
+
+#add-button {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    transform: translate(-50%, -50%);
+    font-size: large;
+    padding: 5px;
+    border: none;
+    border-radius: 4px;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.3);
+}
+
+#add-button:hover {
+    box-shadow: -1px -1px 0px 1px rgba(0, 0, 0, 0.3);
 }
 
 .grid-selector {
@@ -78,6 +136,7 @@
     border-radius: 4px;
     margin: 10px;
     box-shadow: 2px 2px 3px 3px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
 }
 
 .grid-row > p {
@@ -90,4 +149,5 @@
 
 .grid-row.no-hover:hover {
     box-shadow: 2px 2px 3px 3px rgba(0, 0, 0, 0.3);
+    cursor: default;
 }

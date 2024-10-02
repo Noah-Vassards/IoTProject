@@ -16,7 +16,7 @@ export default function Signup() {
 
     const onSubmit = async () => {
         try {
-            const response = await fetch('http://localhost:3001/dev/account/login', {
+            const response = await fetch('http://localhost:3001/dev/account/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,12 +1,9 @@
 import { Body, Controller, Delete, Get, Ip, Param, Post, Request, UseGuards } from "@nestjs/common";
 import { DoesUserExist } from "../../core/guards/doesUserExist.guards";
-import { UsersService } from "./users.service";
+import { Alarm } from "../alarms/alarm.entity";
 import { Component } from "../components/component.entity";
 import { User } from "./users.entity";
-import { CreateComponentDto } from "../components/dto/createComponent.dto";
-import { IsAutenticated } from "src/core/guards/isAuthenticated.guards";
-import { CreateAlarmDto } from "../alarms/dto/createAlarm.dto";
-import { Alarm } from "../alarms/alarm.entity";
+import { UsersService } from "./users.service";
 
 @Controller('users')
 export class UsersController {
@@ -28,8 +25,8 @@ export class UsersController {
     }
 
     @Post(':id/components')
-    async registerComponent(@Param('id') userId: number, @Body() createComponentDto: CreateComponentDto): Promise<User> {
-        return await this.usersService.registerComponent(userId, createComponentDto)
+    async registerComponent(@Param('id') userId: number, @Body() body: {uuid: string}): Promise<User> {
+        return await this.usersService.registerComponent(userId, body.uuid)
     }
 
     @Get(':id/components')
@@ -38,8 +35,8 @@ export class UsersController {
     }
 
     @Post(':id/alarms')
-    async registerAlarm(@Param('id') userId: number, @Body() createAlarmDto: CreateAlarmDto): Promise<User> {
-        return await this.usersService.registerAlarm(userId, createAlarmDto)
+    async registerAlarm(@Param('id') userId: number, @Body() body: {uuid: string}): Promise<User> {
+        return await this.usersService.registerAlarm(userId, body.uuid)
     }
 
     @Get(':id/alarms')

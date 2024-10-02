@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ComponentsModule } from './modules/components/components.module';
 import { UsersModule } from './modules/users/users.module';
 import { AlarmsModule } from './modules/alarms/alarm.module';
+import { MqttModule } from './modules/mqtt/mqtt.module';
 
 @Module({
   imports: [
@@ -14,7 +15,8 @@ import { AlarmsModule } from './modules/alarms/alarm.module';
     UsersModule,
     AuthModule,
     ComponentsModule,
-    AlarmsModule
+    AlarmsModule,
+    MqttModule
   ],
   providers: [],
   controllers: [],

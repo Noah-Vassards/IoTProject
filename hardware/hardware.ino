@@ -14,16 +14,21 @@ MqttClient mqttClient(wifiClient);
 
 const char broker[] = "192.168.212.229";
 int port = 1883;
-const char topic_send[] = "/component/data";
-const char topic_receive[] = "/alarm/activate"
+const char topic_component[] = "/component/data";
+const char topic_active_component[] = "/component/new"
+const char topic_alarm[] = "/alarm/activate";
+const char topic_active_alarm[] = "/alarm/activate";
+const char topic_check_uuid[] = "/check/";
+const char topic_validate_uuid[] = "/check/";
 JSONVar readings;
-JSONVar data;
 unsigned long lastTime = 0;
 unsigned long lastTimeAlarm = 0;
 unsigned long timerDelay = 30000;
 DHT dht(5, DHT11);
 String my_uuid_capteur = "";
 String my_uuid_alarm = "";
+int LED = 0;
+int VENTILLO = 0;
 
 void initDHT(void)
 {
@@ -38,25 +43,87 @@ void initFS(void)
   Serial.println("LittleFS mounted successfully");
 }
 
-void alarm(int messageSize)
+String validate()
 {
-    if (messageSize) {
-      // we received a message, print out the topic and contents
-      Serial.print("Received a message with topic '");
-      Serial.print(mqttClient.messageTopic());
-      Serial.print("', length ");
-      Serial.print(messageSize);
-      Serial.println(" bytes:");
+  readings = JSONVar();
+  reading["validate"] = true;
+  String jsonString = JSON.stringify(readings);
+  return jsonString;
+}
 
-      // use the Stream interface to print the contents
-      receivedMessage = "";  // Réinitialiser la chaîne de message
-      while (mqttClient.available()) {
-        receivedMessage += (char)mqttClient.read();  // Stocke chaque caractère
-      }
-      Serial.println("Message complet reçu : ");
-      Serial.println(receivedMessage);
-      JSONVar jsonObject = JSON.parse(message);
+void check_uuid_capteur(JSONVar jsonObject)
+{
+  if (jsonObject.hasOwnProperty("uuid_alarm")) {
+    String uuid_received_capteur = (const char*)jsonObject["uuid"];
+    if (uuid_received_capteur == my_uuid_capteur) {
+      Serial.println("UUID du capteur valide. Réponse en cours...");
+      mqttClient.beginMessage(topic_validate_uuid + my_uuid_capteur);
+      mqttClient.print(validate());
+      mqttClient.endMessage();
+    } else {
+      Serial.println("UUID du capteur ou de l'alarm invalide.");
     }
+  } else {
+    Serial.println("Le champ 'uuid' est manquant dans le message.");
+  }
+}
+
+void check_uuid_alarm(JSONVar jsonObject)
+{
+  if (jsonObject.hasOwnProperty("uuid_alarm")) {
+    String uuid_received_alarm = (const char*)jsonObject["uuid"];
+    if (uuid_received_alarm == uuid_alarm) {
+      Serial.println("UUID du capteur valide. Réponse en cours...");
+      mqttClient.beginMessage(topic_validate_uuid + my_uuid_alarm);
+      mqttClient.print(validate());
+      mqttClient.endMessage();
+    } else {
+      Serial.println("UUID du capteur ou de l'alarm invalide.");
+    }
+  } else {
+    Serial.println("Le champ 'uuid' est manquant dans le message.");
+  }
+}
+
+void alarm(JSONVar jsonObject)
+{
+  if (jsonObject.hasOwnProperty("uuid")) {
+    String uuid_received_alarm = (const char*)jsonObject["uuid"];
+    if (uuid_received_alarm == uuid_alarm) {
+      digitalWrite(LED, HIGH);
+      digitalWrite(VENTILLO, HIGH);
+    }
+  }
+}
+
+void messages(int messageSize)
+{
+  if (messageSize) {
+    String topic = mqttClient.messageTopic();
+    Serial.print("Message reçu sur le topic : ");
+    Serial.println(topic);
+    String receivedMessage = "";
+    while (mqttClient.available()) {
+      receivedMessage += (char)mqttClient.read();
+    }
+    Serial.println("Message complet reçu : ");
+    Serial.println(receivedMessage);
+    JSONVar jsonObject = JSON.parse(receivedMessage);
+    if (JSON.typeof(jsonObject) == "undefined") {
+      Serial.println("Erreur lors de l'analyse du message JSON");
+      return;
+    }
+
+    // Gestion en fonction du topic
+    if (topic == topic_alarm) {
+      alarm();
+    }
+    else if (topic == topic_check_uuid + my_uuid_capteur) {
+      check_uuid_capteur(jsonObject);
+    } else if (topic == topic_check_uuid + my_uuid_alarm) {
+      check_uuid_alarm(jsonObject);
+    }
+  }
 }
 
 void setup_devices(void) {
@@ -65,8 +132,10 @@ void setup_devices(void) {
   if (!mqttClient.connect(broker, port)) {
      Serial.println("C'est la merde!!");
   }
-  mqttClient.onMessage(alarm);
+  mqttClient.onMessage(messages);
   mqttClient.subscribe(topic_receive);
+  mqttClient.subscribe(topic_check_uuid + my_uuid_capteur);
+  mqttClient.subscribe(topic_check_uuid + my_uuid_alarm);
 }
 
 void setup()
@@ -90,6 +159,7 @@ void setup()
 
 String getSensorReadings(void)
 {
+  readings = JSONVar();
   readings["temperature"] = String(dht.readTemperature());
   readings["humidity"] =  String(dht.readHumidity());
   readings["uuid"] = my_uuid_capteur;
@@ -112,11 +182,5 @@ void send_data(void)
 void loop()
 {
   mqttClient.poll();
-  if (my_uuid_capteur == NULL) {
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(LittleFS, "/index.html", "text/html");
-    });
-  } else {
-    send_data();
-  }
+  send_data();
 }

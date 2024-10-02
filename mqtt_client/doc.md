@@ -4,16 +4,6 @@
 
 ### Reçus par le client mqtt
 
-- /component/new:
-    - Enregistre un nouveau capteur pour un utilisateur
-    - data attendues: 
-    ```json
-        {
-            "uuid": "string", // l'identifiant unique du capteur
-            "user": "A définir" // un moyen d'identifer le proprietaire du capteur
-        }
-    ```
-
 - /component/data:
     - Mise à jour des données reçues par un capteur
     - data attendues:
@@ -22,16 +12,6 @@
             "uuid": "string", // l'identifiant unique du capteur
             "temparture": "number", // la température actuelle
             "humidity": "number", // le taux d'humidité actuelle
-        }
-    ```
-
-- alarm/new:
-    - Enrigistre un nouveau régulateur pour un utilisateur
-    - data attendues: 
-    ```json
-        {
-            "uuid": "string", // l'identifiant unique du capteur
-            "user": "A définir" // un moyen d'identifer le proprietaire du capteur
         }
     ```
 

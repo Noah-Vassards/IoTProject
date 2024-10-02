@@ -19,20 +19,12 @@ const client = mqtt.connect(connectUrl, {
   reconnectPeriod: 1000,
 })
 
-const registerNewComponent = '/component/new'
 const registerNewData = '/component/data'
-const registerNewAlarm = '/alarm/new'
 const activatingAlarm = '/alarm/activate'
 
 client.on('connect', () => {
   console.log('Connected')
 
-  client.subscribe([registerNewComponent], () => {
-    console.log('Subscribe to topic', registerNewComponent)
-  })
-  client.subscribe([registerNewAlarm], () => {
-    console.log('Subscribe to topic', registerNewAlarm)
-  })
   client.subscribe([registerNewData], () => {
     console.log('Subscribe to topic', registerNewData)
   })
@@ -42,23 +34,12 @@ client.on('message', (topic, payload) => {
   console.log('Received Message:', topic, payload.toString())
   const data = JSON.parse(payload.toString())
   console.log(data)
-  if (topic === registerNewComponent) {
-    utils.sendRequest(`http://localhost:3001/dev/users/${data.userId}/components`, 'POST', { uuid: data.uuid })
-      .then(() => console.log('New component created'))
-      .catch(e => console.error(e))
-  }
-  if (topic === registerNewAlarm) {
-    utils.sendRequest(`http://localhost:3001/dev/users/${data.userId}/alarms`, 'POST', { uuid: data.uuid })
-      .then(() => console.log('New alarm created'))
-      .catch(e => console.error(e))
-  }
   if (topic === registerNewData) {
     utils.sendRequest(`http://localhost:3001/dev/components/${data.uuid}/newData`, 'POST', { date: utils.getFormattedDate(), temperature: data.temperature, humidity: data.humidity })
       .then(() => {
         console.log('New data registered')
         utils.sendRequest(`http://localhost:3001/dev/alarms`, 'GET')
           .then((alarms) => {
-            console.log('alarms', alarms)
             alarms.forEach((a) => {
               if (a.linkedComponentUuid === data.uuid) {
                 if (data.temperature < a.temperatureRange[0] || data.temperature > a.temperatureRange[1] || data.humidity < a.humidityRange[0] || data.humidity > a.humidityRange[1]) {

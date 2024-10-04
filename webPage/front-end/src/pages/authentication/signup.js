@@ -25,7 +25,9 @@ export default function Signup() {
             });
 
             if (response.ok) {
-                navigate('/signup'); // Navigate to signup page on success
+                const data = await response.json()
+                localStorage.setItem('userId', data.user.id)
+                navigate('/'); // Navigate to signup page on success
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'Registration failed');

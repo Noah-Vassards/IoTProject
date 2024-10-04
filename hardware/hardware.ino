@@ -13,9 +13,9 @@ WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
 
 const char broker[] = "192.168.212.229";
-int port = 1883;
+int port = 8883;
 const char topic_component[] = "/component/data";
-const char topic_active_component[] = "/component/new"
+const char topic_active_component[] = "/component/new";
 const char topic_alarm[] = "/alarm/activate";
 const char topic_active_alarm[] = "/alarm/activate";
 const char topic_check_uuid[] = "/check/";
@@ -46,7 +46,7 @@ void initFS(void)
 String validate()
 {
   readings = JSONVar();
-  reading["validate"] = true;
+  readings["validate"] = true;
   String jsonString = JSON.stringify(readings);
   return jsonString;
 }
@@ -72,7 +72,7 @@ void check_uuid_alarm(JSONVar jsonObject)
 {
   if (jsonObject.hasOwnProperty("uuid_alarm")) {
     String uuid_received_alarm = (const char*)jsonObject["uuid"];
-    if (uuid_received_alarm == uuid_alarm) {
+    if (uuid_received_alarm == my_uuid_alarm) {
       Serial.println("UUID du capteur valide. Réponse en cours...");
       mqttClient.beginMessage(topic_validate_uuid + my_uuid_alarm);
       mqttClient.print(validate());
@@ -89,7 +89,7 @@ void alarm(JSONVar jsonObject)
 {
   if (jsonObject.hasOwnProperty("uuid")) {
     String uuid_received_alarm = (const char*)jsonObject["uuid"];
-    if (uuid_received_alarm == uuid_alarm) {
+    if (uuid_received_alarm == my_uuid_alarm) {
       digitalWrite(LED, HIGH);
       digitalWrite(VENTILLO, HIGH);
     }
@@ -116,7 +116,7 @@ void messages(int messageSize)
 
     // Gestion en fonction du topic
     if (topic == topic_alarm) {
-      alarm();
+      alarm(jsonObject);
     }
     else if (topic == topic_check_uuid + my_uuid_capteur) {
       check_uuid_capteur(jsonObject);
@@ -133,7 +133,7 @@ void setup_devices(void) {
      Serial.println("C'est la merde!!");
   }
   mqttClient.onMessage(messages);
-  mqttClient.subscribe(topic_receive);
+  mqttClient.subscribe(topic_component);
   mqttClient.subscribe(topic_check_uuid + my_uuid_capteur);
   mqttClient.subscribe(topic_check_uuid + my_uuid_alarm);
 }
@@ -143,7 +143,7 @@ void setup()
   Serial.begin(115200);
   initFS();
   Serial.println("test");
-  ESPConnect.autoConnect("Bacchus", "NOGU2024", 600000);
+  ESPConnect.autoConnect("Bacchus", "NOGU2024", 60000000);
   Serial.println("auto connect");
   if(ESPConnect.begin(&server)){
     Serial.println("Connected to WiFi");
@@ -151,9 +151,7 @@ void setup()
   }else{
     Serial.println("Failed to connect to WiFi");
   }
-
   setup_devices();
-
   server.begin();
 }
 
@@ -173,7 +171,7 @@ void send_data(void)
   float t = dht.readTemperature();
   if ((millis() - lastTime) > timerDelay) {
     lastTime = millis();
-    mqttClient.beginMessage(topic_send);
+    mqttClient.beginMessage(topic_component);
     mqttClient.print(getSensorReadings());
     mqttClient.endMessage();
   }
@@ -181,6 +179,7 @@ void send_data(void)
 
 void loop()
 {
+  Serial.println("wait");
   mqttClient.poll();
   send_data();
 }

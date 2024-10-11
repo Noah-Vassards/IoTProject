@@ -9,5 +9,6 @@ export declare class AlarmsService {
     findAll(): Promise<Alarm[]>;
     update(uuid: string, updateAlarmDto: UpdateAlarmDto): Promise<Alarm>;
     activate(uuid: string, activation: boolean): Promise<Alarm>;
+    forceDeactivation(uuid: string): Promise<Alarm>;
     deleteById(uuid: string): Promise<number>;
 }

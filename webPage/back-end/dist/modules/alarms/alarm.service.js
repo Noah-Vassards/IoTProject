@@ -38,12 +38,24 @@ let AlarmsService = class AlarmsService {
         return await component.save();
     }
     async activate(uuid, activation) {
-        const component = await this.alarmRepository.findOne({ where: { uuid } });
-        if (!component) {
+        const alarm = await this.alarmRepository.findOne({ where: { uuid } });
+        if (!alarm) {
             throw new common_1.BadRequestException('Alarm not found');
         }
-        component.activated = activation;
-        return await component.save();
+        if (alarm.disabledUntil && alarm.disabledUntil.getTime() < Date.now())
+            alarm.activated = activation;
+        return await alarm.save();
+    }
+    async forceDeactivation(uuid) {
+        const alarm = await this.alarmRepository.findOne({ where: { uuid } });
+        if (!alarm) {
+            throw new common_1.BadRequestException('Alarm not found');
+        }
+        alarm.activated = false;
+        const currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() + 1);
+        alarm.disabledUntil = currentDate;
+        return await alarm.save();
     }
     async deleteById(uuid) {
         return await this.alarmRepository.destroy({ where: { uuid } });

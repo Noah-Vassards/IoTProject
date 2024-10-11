@@ -39,6 +39,12 @@ export class Alarm extends Model<Alarm> {
     activated: boolean
 
     @Column({
+        type: DataType.DATE,
+        allowNull: true
+    })
+    disabledUntil: Date
+
+    @Column({
         type: DataType.STRING,
         allowNull: false,
         defaultValue: ''

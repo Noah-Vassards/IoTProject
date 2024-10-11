@@ -6,6 +6,7 @@ export declare class Alarm extends Model<Alarm> {
     humidityRange: number[];
     temperatureRange: number[];
     activated: boolean;
+    disabledUntil: Date;
     linkedComponentUuid: string;
     userId: number;
     user: User;

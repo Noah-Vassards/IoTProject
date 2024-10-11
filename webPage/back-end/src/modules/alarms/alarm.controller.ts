@@ -26,6 +26,11 @@ export class AlarmsController {
         return await this.alarmsService.activate(uuid, activation)
     }
 
+    @Patch(':uuid/forceDeactivation')
+    async forceDeactivation(@Param('uuid') uuid: string) {
+        return await this.alarmsService.forceDeactivation(uuid)
+    }
+
     @Delete(':uuid')
     async deleteByUuid(@Param('uuid') uuid: string) {
         return await this.alarmsService.deleteById(uuid);

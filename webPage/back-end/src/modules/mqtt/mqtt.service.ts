@@ -16,12 +16,12 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   }
 
   connect() {
-    this.client = mqtt.connect('mqtts://localhost:8883', {
-      keyPath: '../../core/constants/certs/key.pem',
-      certPath: '../../core/constants/key.pem',
+    this.client = mqtt.connect('mqtt://localhost:1883', {
+      // keyPath: '../../core/constants/certs/key.pem',
+      // certPath: '../../core/constants/key.pem',
       clientId: `nestjs_${Math.random().toString(16).substr(2, 8)}`,  // Un ID unique
       rejectUnauthorized: false,
-      reconnectPeriod: 1000
+      reconnectPeriod: 5000
     });
 
     this.client.on('connect', () => {

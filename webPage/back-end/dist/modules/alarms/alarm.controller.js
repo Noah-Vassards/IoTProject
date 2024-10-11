@@ -32,6 +32,9 @@ let AlarmsController = class AlarmsController {
     async activate(uuid, activation) {
         return await this.alarmsService.activate(uuid, activation);
     }
+    async forceDeactivation(uuid) {
+        return await this.alarmsService.forceDeactivation(uuid);
+    }
     async deleteByUuid(uuid) {
         return await this.alarmsService.deleteById(uuid);
     }
@@ -65,6 +68,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Boolean]),
     __metadata("design:returntype", Promise)
 ], AlarmsController.prototype, "activate", null);
+__decorate([
+    (0, common_1.Patch)(':uuid/forceDeactivation'),
+    __param(0, (0, common_1.Param)('uuid')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AlarmsController.prototype, "forceDeactivation", null);
 __decorate([
     (0, common_1.Delete)(':uuid'),
     __param(0, (0, common_1.Param)('uuid')),

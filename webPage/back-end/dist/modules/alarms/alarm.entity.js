@@ -55,6 +55,13 @@ __decorate([
 ], Alarm.prototype, "activated", void 0);
 __decorate([
     (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.DATE,
+        allowNull: true
+    }),
+    __metadata("design:type", Date)
+], Alarm.prototype, "disabledUntil", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.STRING,
         allowNull: false,
         defaultValue: ''

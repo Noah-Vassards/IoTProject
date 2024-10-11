@@ -7,5 +7,6 @@ export declare class AlarmsController {
     findAll(): Promise<import("./alarm.entity").Alarm[]>;
     update(uuid: string, updateAlarmDto: UpdateAlarmDto): Promise<import("./alarm.entity").Alarm>;
     activate(uuid: string, activation: boolean): Promise<import("./alarm.entity").Alarm>;
+    forceDeactivation(uuid: string): Promise<import("./alarm.entity").Alarm>;
     deleteByUuid(uuid: string): Promise<number>;
 }

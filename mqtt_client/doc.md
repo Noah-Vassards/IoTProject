@@ -27,8 +27,19 @@
 
 ### Envoyés par le client mqtt
 
-- alarm/activate:
+- /activate/:uuid:
     - Active un régulateur
+    - uuid: l'uuid du régulateur a activer
+    - data envoyées:
+    ```json
+        {
+            "uuid": "string", // l'identifiant du régulateur à activer
+        }
+    ```
+
+- /deactivate/:uuid:
+    - Désactive un régulateur
+    - uuid: l'uuid du régulateur a désactiver
     - data envoyées:
     ```json
         {

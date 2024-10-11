@@ -47,7 +47,7 @@ client.on('message', (topic, payload) => {
                   utils.sendRequest(`http://localhost:3001/dev/alarms/${a.uuid}/activate/true`, 'PATCH')
                     .then(() => console.log('alarm', a.uuid, 'activated'))
                     .catch(e => console.error(e))
-                  client.publish(activatingAlarm, JSON.stringify({ uuid: a.uuid }), { qos: 1, retain: false }, (error) => {
+                  client.publish(`/activate/${a.uuid}`, JSON.stringify({ uuid: a.uuid }), { qos: 1, retain: false }, (error) => {
                     if (error) {
                       console.error(error)
                     }
@@ -57,6 +57,11 @@ client.on('message', (topic, payload) => {
                   utils.sendRequest(`http://localhost:3001/dev/alarms/${a.uuid}/activate/false`, 'PATCH')
                     .then(() => console.log('alarm', a.uuid, 'deactivated'))
                     .catch(e => console.error(e))
+                  client.publish(`/deactivate/${a.uuid}`, JSON.stringify({ uuid: a.uuid }), { qos: 1, retain: false }, (error) => {
+                    if (error) {
+                      console.error(error)
+                    }
+                  })
                 }
               }
             })

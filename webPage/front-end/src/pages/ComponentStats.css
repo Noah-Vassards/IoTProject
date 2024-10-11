@@ -21,20 +21,45 @@
     border: none;
 }
 
-.component-header > button {
+.component-header > .button-container {
     position: absolute;
-    font-size: larger;
     right: 40px;
     top: 50%;
-    padding: 5px;
     transform: translate(0, -50%);
+}
+
+.button-container > button {
+    font-size: larger;
+    padding: 5px;
     border: none;
     border-radius: 4px;
     box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.3);
+    margin: 5px;
 }
 
-.component-header > button:hover {
+.button-container > button:hover {
     box-shadow: -1px -1px 0px 1px rgba(0, 0, 0, 0.3);
+}
+
+#force-stop {
+    background-color: #c70e0e;
+    color: white;
+}
+
+#force-stop:hover {
+    color: black;
+}
+
+#force-stop:disabled {
+    background-color: gray;
+    opacity: 0.3;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+#force-stop:hover:disabled {
+    box-shadow: none;
+    color: white;
 }
 
 .component-selector {

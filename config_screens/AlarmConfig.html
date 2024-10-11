@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            height: 100%;
+            width: 100%;
+        }
+
+        .header {
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-container {
+            flex: 1;
+            width: 100%;
+            margin: 10px;
+            background-color: gainsboro;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1 class>Alarms configuration</h1>
+    </div>
+    <div id="list-container">
+        <input type="text" id="new-sensor-name" placeholder="Enter the new sensor name" />
+        <input type="number" id="new-sensor-pin" placeholder="Enter the new sensor pin" />
+        <button id="add-item-button">Add Item</button>
+        <p id="sensorAlert" style="color: red; display: none;">This name or pin is already used</p>
+        <ul id="dynamic-list">
+            <!-- List items will be added here dynamically -->
+        </ul>
+    </div>
+</body>
+<script>
+    var addButton = document.getElementById('add-item-button');
+    var sensorName = document.getElementById('new-sensor-name');
+    var sensorPin = document.getElementById('new-sensor-pin')
+    var dynamicList = document.getElementById('dynamic-list');
+    var showNameAlert = false;
+    var showPinAlert = false;
+
+    function addNewItem() {
+        var newSensorName = sensorName.value.trim();
+        var newSensorPin = parseInt(sensorPin.value);
+        console.log(typeof newSensorPin, newSensorPin)
+
+        var sensorNameList = document.getElementsByClassName('sensorName')
+        var sensorPinList = document.getElementsByClassName('sensorPin')
+        console.log(Array.from(sensorPinList).map(elem => parseInt(elem.value)).includes(newSensorPin))
+        var isDuplicateName = Array.from(sensorNameList).some((elem) => elem.value === newSensorName)
+        var isDuplicatePin = Array.from(sensorPinList).some((elem) => {console.log(elem.textContent); return parseInt(elem.value) === newSensorPin})
+        console.log(isDuplicateName, isDuplicatePin)
+        if (isDuplicateName || isDuplicatePin) {
+            document.getElementById('sensorAlert').style.display = 'block';
+            return;
+        } else {
+            document.getElementById('sensorAlert').style.display = 'none';
+        }
+        if (newSensorName && newSensorPin > 0) {
+            var listItem = document.createElement('li');
+            var sensorNameEntry = document.createElement('p');
+            var sensorPinEntry = document.createElement('p')
+
+            sensorName.setAttribute('class', "sensorName");
+            sensorPin.setAttribute('class', "sensorPin");
+            listItem.textContent = newSensorName + ' ' + newSensorPin;
+
+            dynamicList.appendChild(listItem);
+
+            sensorName.value = '';
+            sensorPin.value = '';
+        } else {
+            alert('Please enter an item.');
+        }
+    }
+
+    addButton.addEventListener('click', addNewItem);
+</script>
+
+</html>

@@ -2,6 +2,22 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './ComponentStats.css';
 import GaugeReader from './GaugeReader';
+import { ToastContainer, toast } from 'react-toastify';
+
+async function deactivation(uuid) {
+    try {
+        const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}/forceDeactivation`, {
+            method: 'PATCH',
+        })
+        if (response.ok) {
+            return 1
+        }
+        return 0
+    } catch (e) {
+        console.error(e)
+        return 0
+    }
+}
 
 async function getNewInfo(uuid) {
     try {
@@ -13,7 +29,7 @@ async function getNewInfo(uuid) {
             return data
         }
     } catch (e) {
-        console.log()
+        console.error(e)
         return {}
     }
 }
@@ -32,7 +48,7 @@ async function getUserComponents(userId) {
         }
         return []
     } catch (e) {
-        console.log()
+        console.error(e)
         return []
     }
 }
@@ -47,13 +63,12 @@ async function updateAlarm(uuid, updates) {
             body: JSON.stringify(updates)
         })
         if (response.ok) {
-            const data = await response.json()
-            return data
+            return 1
         }
-        return []
+        return 0
     } catch (e) {
-        console.log(e)
-        return {}
+        console.error(e)
+        return 0
     }
 }
 
@@ -67,31 +82,64 @@ export default function AlarmStats() {
     const [temperatureRange, setTemperatureRange] = useState(data?.temperatureRange ?? [0, 100])
     const [humidityRange, setHumidityRange] = useState(data?.humidityRange ?? [0, 100])
     const [name, setName] = useState(data?.name ?? 'Nouveau Capteur')
+    const [activated, setActivated] = useState(data?.activated ?? false)
+    const [notifMessage, setNotifMessage] = useState('')
 
     const onDisconnect = () => {
         navigate('/login')
     }
 
     const onSaveChanges = async () => {
-        await updateAlarm(data.uuid, { name, temperatureRange, humidityRange, linkedComponentUuid })
+        const res = await updateAlarm(data.uuid, { name, temperatureRange, humidityRange, linkedComponentUuid })
+        if (res) {
+            setNotifMessage({status: 'Success', message: "Le capteur à été modifé avec succès"})
+        } else {
+            setNotifMessage({status: 'Error', message: 'Une erreur est survenue lors de la modification du capteur\nVeuillez réessayer ulterieurement'})
+        }
     }
 
     const onSelectLinkedComponent = (newValue) => {
         setLinkedComponent(newValue)
     }
 
+    const onForceStop = async () => {
+        const res = await deactivation(data.uuid)
+        if (res) {
+            setActivated(false)
+            setNotifMessage({status: 'Success', message: "Le régulateur a été stoppé avec succès"})
+        } else {
+            setNotifMessage({status: 'Error', message: "Le régulateur n'a pas pu être stoppé\nVeuillez réessayer ulterieurement"})
+        }
+    }
+
+    useEffect(() => {
+        if (!notifMessage.message)
+            return
+        if (notifMessage.status === 'Success')
+            toast.success(notifMessage.message);
+        else
+            toast.error(notifMessage.message)
+    }, [notifMessage])
+
     useEffect(() => {
         async function fetchData() {
             setComponents(await getUserComponents(userId))
+            const newInfos = await getNewInfo(data.uuid)
+            setActivated(newInfos.activated)
         }
 
         if (userId) {
             fetchData()
+            const interval = setInterval(() => {
+                fetchData()
+            }, 10000);
+            return () => clearInterval(interval);
         }
     }, [])
 
     return (
         <div className="home">
+            <ToastContainer />
             <div className="header">
                 <p>Bacchus</p>
                 <div className="disconnect" onClick={() => onDisconnect()}>
@@ -101,7 +149,10 @@ export default function AlarmStats() {
             <div className='body'>
                 <div className='component-header'>
                     <label>Nom du capteur: </label><input value={name} onChange={(e) => setName(e.target.value)}></input>
-                    <button onClick={onSaveChanges}>Enregistrer</button>
+                    <div className='button-container'>
+                        <button onClick={onSaveChanges}>Enregistrer</button>
+                        <button id='force-stop' onClick={onForceStop} disabled={!activated}>Forcer l'arrêt</button>
+                    </div>
                 </div>
                 <div className='component-selector'>
                     <label>Capteur lié:</label>

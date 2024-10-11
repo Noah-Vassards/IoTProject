@@ -80,7 +80,13 @@ export default function Home() {
 
     const onAddNew = () => {
         async function fetchData() {
-            setNotifMessage(await addNewComponent(userId, newUuid, selected))
+            const res = await addNewComponent(userId, newUuid, selected)
+            console.log(res)
+            setNotifMessage(res)
+            if (res.status === 'Success') {
+                setComponents(await fetchComponents(userId))
+                setAlarms(await fetchAlarms(userId))
+            }
         }
         fetchData()
         setOpenModal(false)
@@ -94,7 +100,6 @@ export default function Home() {
             toast.success(notifMessage.message);
         else
             toast.error(notifMessage.message)
-        
     }, [notifMessage])
 
     useEffect(() => {
@@ -140,7 +145,7 @@ export default function Home() {
             setComponents(await fetchComponents(userId))
             setAlarms(await fetchAlarms(userId))
         }
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 setOpenModal(false)

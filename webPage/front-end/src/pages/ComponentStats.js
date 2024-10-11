@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './ComponentStats.css';
 import GaugeReader from './GaugeReader';
+import { ToastContainer, toast } from 'react-toastify';
 
 async function getNewInfo(uuid) {
     try {
@@ -28,12 +29,11 @@ async function updateComponent(uuid, updates) {
             body: JSON.stringify(updates)
         })
         if (response.ok) {
-            const data = await response.json()
-            return data
+            return 1
         }
     } catch (e) {
         console.log()
-        return {}
+        return 0
     }
 }
 
@@ -43,14 +43,29 @@ export default function ComponentStats() {
     const data = location.state
     const [name, setName] = useState(data?.name ?? 'Nouveau Capteur')
     const [readings, setReadings] = useState(data.data ?? [])
+    const [notifMessage, setNotifMessage] = useState('')
 
     const onDisconnect = () => {
         navigate('/login')
     }
 
     const onSaveChanges = async () => {
-        await updateComponent(data.uuid, { name})
+        const res = await updateComponent(data.uuid, { name })
+        if (res) {
+            setNotifMessage({status: 'Success', message: "Le capteur à été modifé avec succès"})
+        } else {
+            setNotifMessage({status: 'Error', message: 'Une erreur est survenue lors de la modification du capteur\nVeuillez réessayer ulterieurement'})
+        }
     }
+
+    useEffect(() => {
+        if (!notifMessage.message)
+            return
+        if (notifMessage.status === 'Success')
+            toast.success(notifMessage.message);
+        else
+            toast.error(notifMessage.message)
+    }, [notifMessage])
 
     useEffect(() => {
         async function fetchData() {
@@ -67,6 +82,7 @@ export default function ComponentStats() {
 
     return (
         <div className="home">
+            <ToastContainer />
             <div className="header">
                 <p>Bacchus</p>
                 <div className="disconnect" onClick={() => onDisconnect()}>
@@ -76,7 +92,9 @@ export default function ComponentStats() {
             <div className='body'>
                 <div className='component-header'>
                     <label>Nom du capteur: </label><input value={name} onChange={(e) => setName(e.target.value)}></input>
-                    <button onClick={onSaveChanges}>Enregistrer</button>
+                    <div className='button-container'>
+                        <button onClick={onSaveChanges}>Enregistrer</button>
+                    </div>
                 </div>
                 <div className='readings-container'>
                     <div className='readings'>

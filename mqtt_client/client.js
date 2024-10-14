@@ -2,18 +2,18 @@ const mqtt = require('mqtt')
 const fs = require('fs')
 const utils = require('./utils')
 
-const host = 'node1.emqx.io'
-const port = '8883'
+const host = '127.0.0.1'
+const port = '1883'
 const clientId = `mqtt_${Math.random().toString(16).slice(3)}`
 
-const connectUrl = `mqtts://${host}:${port}`
+const connectUrl = `mqtt://${host}:${port}`
 console.log(connectUrl)
 
 const client = mqtt.connect(connectUrl, {
   clientId,
   clean: true,
-  key: fs.readFileSync('./certs/key.pem'),
-  cert: fs.readFileSync('./certs/cert.pem'),
+  // key: fs.readFileSync('./certs/key.pem'),
+  // cert: fs.readFileSync('./certs/cert.pem'),
   rejectUnauthorized: false,
   connectTimeout: 4000,
   reconnectPeriod: 1000,

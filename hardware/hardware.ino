@@ -12,23 +12,23 @@
 AsyncWebServer server(80);
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
-const char broker[] = "192.168.33.190";
+const char broker[] = "192.168.173.190";
 int port = 1883;
 const char topic_component[] = "/component/data";
 const char topic_active_component[] = "/component/new";
-const char topic_activate_alarm[] = "/activate/";
-const char topic_deactivate_alarm[] = "/deactivate/";
 const char topic_check_uuid[] = "/check/";
 const char topic_validate_uuid[] = "/validate/";
 JSONVar readings;
 unsigned long lastTime = 0;
 unsigned long lastTimeAlarm = 0;
 unsigned long timerDelay = 30000;
-DHT dht(5, DHT11);
+DHT dht(5, DHT11); // pin D1
 String my_uuid_capteur = "uuid8cpt1";
 String my_uuid_alarm = "uuid8alr1";
-#define LED_PIN 4
-#define FAN_PIN 2
+const char topic_activate_alarm[] = "/activate/uuid8alr1";
+const char topic_deactivate_alarm[] = "/deactivate/uuid8alr1";
+#define LED_PIN 4 // pin D2
+#define FAN_PIN 2 // pin D4
 
 String validate()
 {
@@ -56,14 +56,12 @@ void check_uuid_alarm(JSONVar jsonObject)
 
 void activate_alarm()
 {
-  Serial.println("Alarm ON");
   digitalWrite(LED_PIN, HIGH);
   digitalWrite(FAN_PIN, HIGH);
 }
 
 void deactivate_alarm()
 {
-  Serial.println("Alarm OFF");
   digitalWrite(LED_PIN, LOW);
   digitalWrite(FAN_PIN, LOW);
 }
@@ -86,14 +84,9 @@ void messages(int messageSize)
       return;
     }
 
-    // Gestion en fonction du topic
-    Serial.print("Topic = ");
-    Serial.println(topic);
-    Serial.print("mon topic check = ");
-    Serial.println(topic_activate_alarm + my_uuid_alarm);
-    if (topic == topic_activate_alarm + my_uuid_alarm) {
+    if (topic == topic_activate_alarm) {
       activate_alarm();
-    } else if (topic ==topic_deactivate_alarm + my_uuid_alarm) {
+    } else if (topic ==topic_deactivate_alarm) {
       deactivate_alarm();
     }
     else if (topic == topic_check_uuid + my_uuid_capteur) {
@@ -107,11 +100,11 @@ void messages(int messageSize)
 void setup_devices(void) {
   dht.begin();
   if (!mqttClient.connect(broker, port)) {
-     Serial.println("C'est la merde!!");
+     Serial.println("Failed to connect to MQTT");
   }
   mqttClient.onMessage(messages);
-  mqttClient.subscribe(topic_activate_alarm + my_uuid_alarm);
-  mqttClient.subscribe(topic_deactivate_alarm + my_uuid_alarm);  
+  mqttClient.subscribe(topic_activate_alarm);
+  mqttClient.subscribe(topic_deactivate_alarm);  
   mqttClient.subscribe(topic_check_uuid + my_uuid_capteur);
   mqttClient.subscribe(topic_check_uuid + my_uuid_alarm);
 }
@@ -119,9 +112,8 @@ void setup_devices(void) {
 void setup()
 {
   Serial.begin(115200);
-  Serial.println("test");
+  //server.begin();
   ESPConnect.autoConnect("Bacchus", "NOGU2024", 60000000);
-  Serial.println("auto connect");
   if(ESPConnect.begin(&server)){
     Serial.println("Connected to WiFi");
     Serial.println("IPAddress: "+WiFi.localIP().toString());
@@ -129,12 +121,10 @@ void setup()
     Serial.println("Failed to connect to WiFi");
   }
   setup_devices();
-  //server.begin();
   pinMode(LED_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW); 
   digitalWrite(FAN_PIN, LOW);
-  Serial.println("end SetUp");
 }
 
 String getSensorReadings(void)

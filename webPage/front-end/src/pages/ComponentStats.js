@@ -44,8 +44,8 @@ export default function ComponentStats() {
     const location = useLocation()
     const data = location.state
     const token = localStorage.getItem('token')
-    const [name, setName] = useState(data?.name ?? 'Nouveau Capteur')
-    const [readings, setReadings] = useState(data.data ?? [])
+    const [name, setName] = useState('')
+    const [readings, setReadings] = useState([])
     const [notifMessage, setNotifMessage] = useState('')
 
     const onDisconnect = () => {
@@ -81,6 +81,17 @@ export default function ComponentStats() {
             fetchData()
         }, 10000);
         return () => clearInterval(interval);
+    }, [])
+
+    useEffect(() => {
+        async function fetchData() {
+            const newData = await getNewInfo(token, data.uuid)
+            if (newData) {
+                setReadings(newData.data)
+                setName(newData.name)
+            }
+        }
+        fetchData()
     }, [])
 
     return (

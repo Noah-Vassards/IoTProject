@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
+const auth_guard_1 = require("../../core/guards/auth.guard");
 const doesUserExist_guards_1 = require("../../core/guards/doesUserExist.guards");
 const users_service_1 = require("./users.service");
 let UsersController = class UsersController {
@@ -21,26 +22,29 @@ let UsersController = class UsersController {
         this.usersService = usersService;
     }
     async deleteByMail(req) {
+        if (req.user.role !== 'admin') {
+            throw new common_1.UnauthorizedException();
+        }
         console.debug(req.query || req.body.email);
         return await this.usersService.delete(req.query.email || req.body.email);
     }
-    async getAll(ip) {
-        if (ip !== '::1') {
-            return [];
+    async getAll(req) {
+        if (req.user.role !== 'admin') {
+            throw new common_1.UnauthorizedException();
         }
         return await this.usersService.findAll();
     }
-    async registerComponent(userId, body) {
-        return await this.usersService.registerComponent(userId, body.uuid);
+    async registerComponent(req, body) {
+        return await this.usersService.registerComponent(req.user.id, body.uuid);
     }
-    async getAllComponents(userId) {
-        return await this.usersService.findAllComponents(userId);
+    async getAllComponents(req) {
+        return await this.usersService.findAllComponents(req.user.id);
     }
-    async registerAlarm(userId, body) {
-        return await this.usersService.registerAlarm(userId, body.uuid);
+    async registerAlarm(req, body) {
+        return await this.usersService.registerAlarm(req.user.id, body.uuid);
     }
-    async getAllAlarms(userId) {
-        return await this.usersService.findAllAlarms(userId);
+    async getAllAlarms(req) {
+        return await this.usersService.findAllAlarms(req.user.id);
     }
 };
 __decorate([
@@ -53,43 +57,44 @@ __decorate([
 ], UsersController.prototype, "deleteByMail", null);
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Ip)()),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAll", null);
 __decorate([
-    (0, common_1.Post)(':id/components'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)('components'),
+    __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "registerComponent", null);
 __decorate([
-    (0, common_1.Get)(':id/components'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('components'),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAllComponents", null);
 __decorate([
-    (0, common_1.Post)(':id/alarms'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Post)('alarms'),
+    __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "registerAlarm", null);
 __decorate([
-    (0, common_1.Get)(':id/alarms'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)('alarms'),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "getAllAlarms", null);
 UsersController = __decorate([
     (0, common_1.Controller)('users'),
+    (0, common_1.UseGuards)(auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [users_service_1.UsersService])
 ], UsersController);
 exports.UsersController = UsersController;

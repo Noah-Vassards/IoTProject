@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, MinLength, Validate } from "class-validator";
 import { IsStrong } from "../../../core/pipes/isStrong.pipes";
+import { Optional } from "@nestjs/common";
 
 export class UserDto {
     @IsNotEmpty()

@@ -23,13 +23,11 @@ let AuthController = class AuthController {
         this.authService = authService;
     }
     async login(request) {
-        return await this.authService.login(request.user, request.body.token);
+        return await this.authService.login(request.user);
     }
     async signUp(user) {
-        var _a;
         const userInfo = { email: user.email, password: user.password, name: user.name };
-        console.log('token ---------->', (_a = user['token']) === null || _a === void 0 ? void 0 : _a.access_token);
-        return await this.authService.create(userInfo, user['token']);
+        return await this.authService.create(userInfo);
     }
 };
 __decorate([

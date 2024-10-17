@@ -21,10 +21,4 @@ export class Token extends Model<Token> {
         allowNull: false,
     })
     expiration_date: Date
-
-    @Column({
-        type: DataType.TEXT,
-        allowNull: true,
-    })
-    refresh_token: string
 }

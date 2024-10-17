@@ -5,12 +5,14 @@ import Home from './pages/Home';
 import ComponentStats from './pages/ComponentStats';
 import HumidityGauge from './pages/GaugeReader';
 import AlarmStats from './pages/AlarmStats';
+import Admin from './pages/Admin';
 
 function App() {
   return (
     <>
       <Routes>
         <Route path='/' element={<Home />}/>
+        <Route path='/admin' element={<Admin />}/>
         <Route path='/login' element={<Login />}/>
         <Route path='/signup' element={<Signup />}/>
         <Route path='/componentConfig' element={<ComponentStats />}/>

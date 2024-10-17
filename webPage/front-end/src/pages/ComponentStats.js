@@ -4,10 +4,11 @@ import './ComponentStats.css';
 import GaugeReader from './GaugeReader';
 import { ToastContainer, toast } from 'react-toastify';
 
-async function getNewInfo(uuid) {
+async function getNewInfo(token, uuid) {
     try {
         const response = await fetch(`http://localhost:3001/dev/components/${uuid}`, {
             method: 'GET',
+            headers: {'Authorization': `Bearer ${token}`}
         })
         if (response.ok) {
             const data = await response.json()
@@ -19,12 +20,13 @@ async function getNewInfo(uuid) {
     }
 }
 
-async function updateComponent(uuid, updates) {
+async function updateComponent(token, uuid, updates) {
     try {
         const response = await fetch(`http://localhost:3001/dev/components/${uuid}`, {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(updates)
         })
@@ -41,6 +43,7 @@ export default function ComponentStats() {
     const navigate = useNavigate()
     const location = useLocation()
     const data = location.state
+    const token = localStorage.getItem('token')
     const [name, setName] = useState(data?.name ?? 'Nouveau Capteur')
     const [readings, setReadings] = useState(data.data ?? [])
     const [notifMessage, setNotifMessage] = useState('')
@@ -50,7 +53,7 @@ export default function ComponentStats() {
     }
 
     const onSaveChanges = async () => {
-        const res = await updateComponent(data.uuid, { name })
+        const res = await updateComponent(token, data.uuid, { name })
         if (res) {
             setNotifMessage({status: 'Success', message: "Le capteur à été modifé avec succès"})
         } else {
@@ -69,7 +72,7 @@ export default function ComponentStats() {
 
     useEffect(() => {
         async function fetchData() {
-            const newData = await getNewInfo(data.uuid)
+            const newData = await getNewInfo(token, data.uuid)
             if (newData) {
                 setReadings(newData.data)
             }

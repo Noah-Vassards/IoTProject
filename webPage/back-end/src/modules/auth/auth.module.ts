@@ -4,7 +4,7 @@ import { AuthController } from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module';
 import { LocalStrategy } from './local.strategy';
-// import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy } from './jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { TokenModule } from '../token/token.module';
 
@@ -17,13 +17,14 @@ import { TokenModule } from '../token/token.module';
       useFactory: () => ({
         secret: process.env.JWTKEY,
         signOptions: { expiresIn: process.env.TOKEN_EXPIRATION }
-      })
+      }),
+      global: true
     }),
   ],
   providers: [
     AuthService,
     LocalStrategy,
-    // JwtStrategy,
+    JwtStrategy,
   ],
   controllers: [AuthController]
 })

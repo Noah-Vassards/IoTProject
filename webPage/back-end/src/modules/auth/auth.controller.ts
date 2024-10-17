@@ -12,7 +12,7 @@ import { IsAutenticated } from '../../core/guards/isAuthenticated.guards';
  */
 @Controller('account')
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService) { }
 
     /**
      * Logs in a user with provided credentials.
@@ -22,13 +22,7 @@ export class AuthController {
     @UseGuards(AuthGuard('local'))
     @Post('login')
     async login(@Req() request: Request) {
-        // console.log("debug --------------")
-        // console.debug(request)
-        // console.debug(request.body)
-        // console.debug(request.user)
-        // console.log("--------------------")
-        // console.log('test login')
-        return await this.authService.login(request.user, request.body.token);
+        return await this.authService.login(request.user);
     }
 
     /**
@@ -39,10 +33,7 @@ export class AuthController {
     @UseGuards(DoesUserAlreadyExist)
     @Post('signup')
     async signUp(@Body() user: UserDto) {
-        // console.debug("user", user)
-        // console.debug(user['token'])
-        const userInfo: UserDto = {email: user.email, password: user.password, name: user.name}
-        console.log('token ---------->', user['token']?.access_token)
-        return await this.authService.create(userInfo, user['token']);
+        const userInfo: UserDto = { email: user.email, password: user.password, name: user.name }
+        return await this.authService.create(userInfo);
     }
 }

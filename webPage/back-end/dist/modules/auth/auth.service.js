@@ -49,62 +49,35 @@ let AuthService = class AuthService {
         const _a = user['dataValues'], { password } = _a, result = __rest(_a, ["password"]);
         return result;
     }
-    async login(userInfo, tokenInfo) {
+    async login(userInfo) {
         console.info("user", userInfo);
-        console.debug("tokenInfo", tokenInfo);
-        console.debug(userInfo.password);
-        let newTokenInfo = {
-            access_token: "",
-            expires_in: 0,
-            refresh_token: "",
-        };
         const userToken = await this.tokenService.findOneByUserId(userInfo.id);
         const currentDate = new Date();
         if (currentDate.getTime() < userToken.expiration_date.getTime()) {
             console.log('token not expired');
             return { user: userInfo, token: userToken.access_token };
         }
-        console.log('token expired');
-        if (tokenInfo) {
-            newTokenInfo.access_token = tokenInfo.access_token;
-            newTokenInfo.expires_in = tokenInfo.expires_in;
-            newTokenInfo.refresh_token = tokenInfo.refresh_token;
-        }
-        else {
-            newTokenInfo.access_token = await this.generateToken(userInfo);
-        }
-        console.log(newTokenInfo);
-        await this.tokenService.updateToken(userToken, newTokenInfo);
-        return { user: userInfo, token: newTokenInfo.access_token };
+        const newToken = await this.generateToken(userInfo);
+        await this.tokenService.updateToken(userToken, newToken);
+        return { user: userInfo, token: newToken };
     }
-    async create(user, tokenInfo) {
+    async create(user) {
         const pass = await this.hashPassword(user.password);
         const newUser = await this.userService.create(Object.assign(Object.assign({}, user), { password: pass }));
         const _a = newUser['dataValues'], { password } = _a, result = __rest(_a, ["password"]);
         console.log('----------------');
         console.log(result);
-        let token = "";
-        let refresh_token = "";
-        let expIn = 0;
-        console.log(token);
-        if (tokenInfo && (tokenInfo === null || tokenInfo === void 0 ? void 0 : tokenInfo.access_token) !== '') {
-            token = tokenInfo.access_token;
-            refresh_token = tokenInfo.refresh_token;
-            expIn = tokenInfo.expires_in;
-        }
-        else {
-            token = await this.generateToken(result);
-        }
+        const token = await this.generateToken(result);
         console.log(token);
         let date = new Date();
-        date.setDate(date.getDate() + (expIn || 7));
+        date.setDate(date.getDate() + 7);
         console.log(date);
-        const newToken = await this.tokenService.create({ access_token: token, expiration_date: date, refresh_token: refresh_token }, result.id);
+        const newToken = await this.tokenService.create({ access_token: token, expiration_date: date }, result.id);
         console.log(newToken['dataValues']);
         return { user: result, token };
     }
     async generateToken(user) {
-        const token = await this.jwtService.signAsync(user);
+        const token = await this.jwtService.signAsync({ email: user.email, id: user.id, role: user.role });
         return token;
     }
     async hashPassword(password) {

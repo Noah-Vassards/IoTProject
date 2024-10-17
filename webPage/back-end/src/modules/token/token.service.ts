@@ -71,10 +71,8 @@ export class TokenService {
      * @param {string} newToken - the new access_token
      */
     async updateToken(tokenEntity: Token, newToken: any) {
-        console.log(newToken.access_token)
-        tokenEntity.access_token = newToken.access_token;
-        tokenEntity.expiration_date = this.getNewExpirationDate(newToken.expires_in);
-        tokenEntity.refresh_token = newToken.refresh_token;
+        tokenEntity.access_token = newToken;
+        tokenEntity.expiration_date = this.getNewExpirationDate();
         await tokenEntity.save();
         console.log(tokenEntity['dataValues'])
     }

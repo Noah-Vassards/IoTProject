@@ -13,6 +13,7 @@ const auth_controller_1 = require("./auth.controller");
 const passport_1 = require("@nestjs/passport");
 const users_module_1 = require("../users/users.module");
 const local_strategy_1 = require("./local.strategy");
+const jwt_strategy_1 = require("./jwt.strategy");
 const jwt_1 = require("@nestjs/jwt");
 const token_module_1 = require("../token/token.module");
 let AuthModule = class AuthModule {
@@ -27,12 +28,14 @@ AuthModule = __decorate([
                 useFactory: () => ({
                     secret: process.env.JWTKEY,
                     signOptions: { expiresIn: process.env.TOKEN_EXPIRATION }
-                })
+                }),
+                global: true
             }),
         ],
         providers: [
             auth_service_1.AuthService,
             local_strategy_1.LocalStrategy,
+            jwt_strategy_1.JwtStrategy,
         ],
         controllers: [auth_controller_1.AuthController]
     })

@@ -41,10 +41,8 @@ let TokenService = class TokenService {
         return await this.tokenRepository.destroy({ where: { user_id } });
     }
     async updateToken(tokenEntity, newToken) {
-        console.log(newToken.access_token);
-        tokenEntity.access_token = newToken.access_token;
-        tokenEntity.expiration_date = this.getNewExpirationDate(newToken.expires_in);
-        tokenEntity.refresh_token = newToken.refresh_token;
+        tokenEntity.access_token = newToken;
+        tokenEntity.expiration_date = this.getNewExpirationDate();
         await tokenEntity.save();
         console.log(tokenEntity['dataValues']);
     }

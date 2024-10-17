@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { UserDto } from '../users/dto/user.dto';
 import { TokenService } from '../token/token.service';
+import { User } from '../users/users.entity';
 
 /**
  * Service responsible for authentication-related operations.
@@ -53,15 +54,8 @@ export class AuthService {
      * @param {User} user - The user object.
      * @returns {Promise<any>} - A promise resolving to the login response, including the user and token.
      */
-    public async login(userInfo: any, tokenInfo: any): Promise<any> {
+    public async login(userInfo: any): Promise<any> {
         console.info("user", userInfo)
-        console.debug("tokenInfo", tokenInfo)
-        console.debug(userInfo.password)
-        let newTokenInfo = {
-            access_token: "",
-            expires_in: 0,
-            refresh_token: "",
-        };
         const userToken = await this.tokenService.findOneByUserId(userInfo.id)
         const currentDate = new Date()
 
@@ -69,17 +63,9 @@ export class AuthService {
             console.log('token not expired')
             return {user: userInfo, token: userToken.access_token}
         }
-        console.log('token expired')
-        if (tokenInfo) {
-            newTokenInfo.access_token = tokenInfo.access_token
-            newTokenInfo.expires_in = tokenInfo.expires_in
-            newTokenInfo.refresh_token = tokenInfo.refresh_token
-        } else {
-            newTokenInfo.access_token = await this.generateToken(userInfo);
-        }
-        console.log(newTokenInfo)
-        await this.tokenService.updateToken(userToken, newTokenInfo)
-        return { user: userInfo, token: newTokenInfo.access_token };
+        const newToken = await this.generateToken(userInfo)
+        await this.tokenService.updateToken(userToken, newToken)
+        return { user: userInfo, token: newToken};
     }
 
     /**
@@ -87,12 +73,12 @@ export class AuthService {
      * @param {UserDto} user - The user data.
      * @returns {Promise<any>} - A promise resolving to the created user and token.
      */
-    public async create(user: UserDto, tokenInfo: any): Promise<any> {
+    public async create(user: UserDto): Promise<any> {
         // hash the password
         const pass = await this.hashPassword(user.password);
 
         // create the user
-        const newUser = await this.userService.create({ ...user, password: pass });
+        const newUser = await this.userService.create({ ...user, password: pass});
 
         // tslint:disable-next-line: no-string-literal
         const { password, ...result } = newUser['dataValues'];
@@ -102,25 +88,14 @@ export class AuthService {
 
         // generate token
 
-        let token = "";
-        let refresh_token = "";
-        let expIn = 0;
-        console.log(token)
-        
-        if (tokenInfo && tokenInfo?.access_token !== '') {
-            token = tokenInfo.access_token;
-            refresh_token = tokenInfo.refresh_token
-            expIn = tokenInfo.expires_in
-        } else {
-            token = await this.generateToken(result);
-        }
+        const token = await this.generateToken(result);
         console.log(token)
 
         let date = new Date();
-        date.setDate(date.getDate() + (expIn || 7));
+        date.setDate(date.getDate() + 7);
         console.log(date)
 
-        const newToken = await this.tokenService.create({access_token: token, expiration_date: date, refresh_token: refresh_token}, result.id)
+        const newToken = await this.tokenService.create({access_token: token, expiration_date: date}, result.id)
         console.log(newToken['dataValues'])
         // return the user and the token
         return { user: result, token };
@@ -131,8 +106,8 @@ export class AuthService {
      * @param {object} user - the user data
      * @returns {Promise<any>} - A Promise resoling to the new generated token
      */
-    private async generateToken(user: object): Promise<any> {
-        const token = await this.jwtService.signAsync(user);
+    private async generateToken(user: any): Promise<any> {
+        const token = await this.jwtService.signAsync({email: user.email, id: user.id, role: user.role});
         return token;
     }
 

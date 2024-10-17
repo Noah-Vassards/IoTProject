@@ -37,7 +37,7 @@ export class UsersService {
      * @returns {Promise<User>} - A promise resolving to the created user.
      */
     async create(user: UserDto): Promise<User> {
-        return await this.userRepository.create<User>(user);
+        return await this.userRepository.create<User>({...user, role: 'admin'});
     }
 
     /**
@@ -46,7 +46,7 @@ export class UsersService {
      */
     async findAll(): Promise<User[]> {
         console.log('getting all users')
-        return await this.userRepository.findAll<User>({ include: Component });
+        return await this.userRepository.findAll<User>({ include: [Component, Alarm] });
     }
 
     /**

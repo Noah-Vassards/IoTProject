@@ -42,11 +42,17 @@ let AlarmsService = class AlarmsService {
         if (!alarm) {
             throw new common_1.BadRequestException('Alarm not found');
         }
-        if (alarm.disabledUntil && alarm.disabledUntil.getTime() < Date.now())
+        const date = new Date();
+        date.setDate(date.getDate() - 872);
+        alarm.disabledUntil = date;
+        if (alarm.disabledUntil && alarm.disabledUntil.getTime() < Date.now()) {
+            console.log(activation ? 'activation' : 'deactivation');
             alarm.activated = activation;
+        }
         return await alarm.save();
     }
     async forceDeactivation(uuid) {
+        console.log('force deactivation');
         const alarm = await this.alarmRepository.findOne({ where: { uuid } });
         if (!alarm) {
             throw new common_1.BadRequestException('Alarm not found');

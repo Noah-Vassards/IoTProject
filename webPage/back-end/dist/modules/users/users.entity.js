@@ -13,6 +13,7 @@ exports.User = void 0;
 const sequelize_typescript_1 = require("sequelize-typescript");
 const component_entity_1 = require("../components/component.entity");
 const alarm_entity_1 = require("../alarms/alarm.entity");
+const token_entity_1 = require("../token/token.entity");
 let User = class User extends sequelize_typescript_1.Model {
 };
 __decorate([
@@ -37,6 +38,18 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.ENUM("admin", "user"),
+        allowNull: false,
+        defaultValue: "user"
+    }),
+    __metadata("design:type", String)
+], User.prototype, "role", void 0);
+__decorate([
+    (0, sequelize_typescript_1.HasOne)(() => token_entity_1.Token),
+    __metadata("design:type", token_entity_1.Token)
+], User.prototype, "token", void 0);
 __decorate([
     (0, sequelize_typescript_1.HasMany)(() => component_entity_1.Component),
     __metadata("design:type", Array)

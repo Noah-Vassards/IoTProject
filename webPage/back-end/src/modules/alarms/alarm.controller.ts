@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/common';
 import { AlarmsService } from './alarm.service';
 import { UpdateAlarmDto } from './dto/updateAlarm.dto';
 

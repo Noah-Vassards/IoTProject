@@ -36,13 +36,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], Token.prototype, "expiration_date", void 0);
-__decorate([
-    (0, sequelize_typescript_1.Column)({
-        type: sequelize_typescript_1.DataType.TEXT,
-        allowNull: true,
-    }),
-    __metadata("design:type", String)
-], Token.prototype, "refresh_token", void 0);
 Token = __decorate([
     sequelize_typescript_1.Table
 ], Token);

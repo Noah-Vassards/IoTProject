@@ -6,13 +6,13 @@ export declare class UsersController {
     private usersService;
     constructor(usersService: UsersService);
     deleteByMail(req: any): Promise<number>;
-    getAll(ip: any): Promise<User[]>;
-    registerComponent(userId: number, body: {
+    getAll(req: any): Promise<User[]>;
+    registerComponent(req: any, body: {
         uuid: string;
     }): Promise<User>;
-    getAllComponents(userId: number): Promise<Component[]>;
-    registerAlarm(userId: number, body: {
+    getAllComponents(req: any): Promise<Component[]>;
+    registerAlarm(req: any, body: {
         uuid: string;
     }): Promise<User>;
-    getAllAlarms(userId: number): Promise<Alarm[]>;
+    getAllAlarms(req: any): Promise<Alarm[]>;
 }

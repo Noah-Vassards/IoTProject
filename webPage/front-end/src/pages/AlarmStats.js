@@ -4,10 +4,11 @@ import './ComponentStats.css';
 import GaugeReader from './GaugeReader';
 import { ToastContainer, toast } from 'react-toastify';
 
-async function deactivation(uuid) {
+async function deactivation(token, uuid) {
     try {
         const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}/forceDeactivation`, {
             method: 'PATCH',
+            headers: {'Authorization': `Bearer ${token}`}
         })
         if (response.ok) {
             return 1
@@ -19,10 +20,11 @@ async function deactivation(uuid) {
     }
 }
 
-async function getNewInfo(uuid) {
+async function getNewInfo(token, uuid) {
     try {
         const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}`, {
             method: 'GET',
+            headers: {'Authorization': `Bearer ${token}`}
         })
         if (response.ok) {
             const data = await response.json()
@@ -34,12 +36,13 @@ async function getNewInfo(uuid) {
     }
 }
 
-async function getUserComponents(userId) {
+async function getUserComponents(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/${userId}/components`, {
+        const response = await fetch(`http://localhost:3001/dev/users/components`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
         })
         if (response.ok) {
@@ -53,12 +56,13 @@ async function getUserComponents(userId) {
     }
 }
 
-async function updateAlarm(uuid, updates) {
+async function updateAlarm(token, uuid, updates) {
     try {
         const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}`, {
             method: 'PATCH',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(updates)
         })
@@ -76,7 +80,7 @@ export default function AlarmStats() {
     const navigate = useNavigate()
     const location = useLocation()
     const data = location.state
-    const userId = data.userId
+    const token = localStorage.getItem('token')
     const [components, setComponents] = useState([])
     const [linkedComponentUuid, setLinkedComponent] = useState(data?.linkedComponentUuid)
     const [temperatureRange, setTemperatureRange] = useState(data?.temperatureRange ?? [0, 100])
@@ -90,7 +94,7 @@ export default function AlarmStats() {
     }
 
     const onSaveChanges = async () => {
-        const res = await updateAlarm(data.uuid, { name, temperatureRange, humidityRange, linkedComponentUuid })
+        const res = await updateAlarm(token, data.uuid, { name, temperatureRange, humidityRange, linkedComponentUuid })
         if (res) {
             setNotifMessage({status: 'Success', message: "Le capteur à été modifé avec succès"})
         } else {
@@ -103,7 +107,7 @@ export default function AlarmStats() {
     }
 
     const onForceStop = async () => {
-        const res = await deactivation(data.uuid)
+        const res = await deactivation(token, data.uuid)
         if (res) {
             setActivated(false)
             setNotifMessage({status: 'Success', message: "Le régulateur a été stoppé avec succès"})
@@ -123,12 +127,12 @@ export default function AlarmStats() {
 
     useEffect(() => {
         async function fetchData() {
-            setComponents(await getUserComponents(userId))
-            const newInfos = await getNewInfo(data.uuid)
+            setComponents(await getUserComponents(token))
+            const newInfos = await getNewInfo(token, data.uuid)
             setActivated(newInfos.activated)
         }
 
-        if (userId) {
+        if (token) {
             fetchData()
             const interval = setInterval(() => {
                 fetchData()

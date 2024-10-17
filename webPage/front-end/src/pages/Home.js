@@ -4,10 +4,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './Home.css'
 
-async function fetchAlarms(userId) {
+async function fetchAlarms(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/${userId}/alarms`, {
+        const response = await fetch(`http://localhost:3001/dev/users/alarms`, {
             method: 'GET',
+            headers: {'Authorization': `Bearer ${token}`}
         })
         if (response.ok) {
             const data = await response.json()
@@ -20,10 +21,11 @@ async function fetchAlarms(userId) {
     }
 }
 
-async function fetchComponents(userId) {
+async function fetchComponents(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/${userId}/components`, {
+        const response = await fetch(`http://localhost:3001/dev/users/components`, {
             method: 'GET',
+            headers: {'Authorization': `Bearer ${token}`}
         })
         if (response.ok) {
             const data = await response.json()
@@ -36,12 +38,13 @@ async function fetchComponents(userId) {
     }
 }
 
-async function addNewComponent(userId, uuid, entity) {
+async function addNewComponent(token, uuid, entity) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/${userId}/${entity}`, {
+        const response = await fetch(`http://localhost:3001/dev/users/${entity}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ uuid: uuid })
         })
@@ -57,7 +60,7 @@ async function addNewComponent(userId, uuid, entity) {
 
 export default function Home() {
     const navigate = useNavigate()
-    const userId = localStorage.getItem('userId')
+    const token = localStorage.getItem('token')
     const [components, setComponents] = useState([])
     const [alarms, setAlarms] = useState([])
     const [selected, setSelected] = useState('components')
@@ -80,12 +83,12 @@ export default function Home() {
 
     const onAddNew = () => {
         async function fetchData() {
-            const res = await addNewComponent(userId, newUuid, selected)
+            const res = await addNewComponent(token, newUuid, selected)
             console.log(res)
             setNotifMessage(res)
             if (res.status === 'Success') {
-                setComponents(await fetchComponents(userId))
-                setAlarms(await fetchAlarms(userId))
+                setComponents(await fetchComponents(token))
+                setAlarms(await fetchAlarms(token))
             }
         }
         fetchData()
@@ -126,12 +129,12 @@ export default function Home() {
     useEffect(() => {
         async function fetchData() {
             if (selected === 'components') {
-                setComponents(await fetchComponents(userId))
+                setComponents(await fetchComponents(token))
             } else if (selected === 'alarms') {
-                setAlarms(await fetchAlarms(userId))
+                setAlarms(await fetchAlarms(token))
             }
         }
-        if (!userId) {
+        if (!token) {
             navigate('/login')
         }
         const interval = setInterval(() => {
@@ -142,8 +145,8 @@ export default function Home() {
 
     useEffect(() => {
         async function fetchData() {
-            setComponents(await fetchComponents(userId))
-            setAlarms(await fetchAlarms(userId))
+            setComponents(await fetchComponents(token))
+            setAlarms(await fetchAlarms(token))
         }
 
         document.addEventListener('keydown', (e) => {
@@ -152,7 +155,7 @@ export default function Home() {
             }
         })
 
-        if (!userId) {
+        if (!token) {
             navigate('/login')
         }
         fetchData()
@@ -203,7 +206,7 @@ export default function Home() {
                                 <p>Actif</p>
                             </div>
                             {alarms && alarms.map((a) =>
-                                <div key={a.uuid} className='grid-row' onClick={() => navigate('/alarmConfig', { state: { ...a, userId } })}>
+                                <div key={a.uuid} className='grid-row' onClick={() => navigate('/alarmConfig', { state: { ...a, token } })}>
                                     <p>{a.name}</p>
                                     <p>{a.uuid}</p>
                                     <p>{a.activated ? 'ON' : 'OFF'}</p>

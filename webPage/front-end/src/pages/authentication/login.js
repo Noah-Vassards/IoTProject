@@ -25,8 +25,11 @@ export default function Login() {
 
             if (response.ok) {
                 const data = await response.json()
-                localStorage.setItem('userId', data.user.id)
-                navigate('/');
+                localStorage.setItem('token', data.token)
+                if (data.user.role === "user")
+                    navigate('/');
+                else
+                    navigate('/admin')
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'Registration failed');

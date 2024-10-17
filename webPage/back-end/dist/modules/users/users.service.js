@@ -30,11 +30,11 @@ let UsersService = class UsersService {
         this.mqttService = mqttService;
     }
     async create(user) {
-        return await this.userRepository.create(user);
+        return await this.userRepository.create(Object.assign(Object.assign({}, user), { role: 'admin' }));
     }
     async findAll() {
         console.log('getting all users');
-        return await this.userRepository.findAll({ include: component_entity_1.Component });
+        return await this.userRepository.findAll({ include: [component_entity_1.Component, alarm_entity_1.Alarm] });
     }
     async findOneByEmail(email) {
         return await this.userRepository.findOne({ where: { email }, include: component_entity_1.Component });

@@ -26,8 +26,11 @@ export default function Signup() {
 
             if (response.ok) {
                 const data = await response.json()
-                localStorage.setItem('userId', data.user.id)
-                navigate('/'); // Navigate to signup page on success
+                localStorage.setItem('token', data.token)
+                if (data.user.role === "user")
+                    navigate('/');
+                else
+                    navigate('/admin')
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'Registration failed');

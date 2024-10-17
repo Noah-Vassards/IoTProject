@@ -6,6 +6,4 @@ export class TokenDto {
 
     @IsNotEmpty()
     readonly expiration_date: Date;
-
-    readonly refresh_token: string;
 }

@@ -12,7 +12,7 @@
 AsyncWebServer server(80);
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
-const char broker[] = "192.168.173.190";
+const char broker[] = "192.168.214.190";
 int port = 1883;
 const char topic_component[] = "/component/data";
 const char topic_active_component[] = "/component/new";
@@ -134,6 +134,7 @@ String getSensorReadings(void)
   readings["humidity"] =  round(dht.readHumidity());
   readings["uuid"] = my_uuid_capteur;
   String jsonString = JSON.stringify(readings);
+  Serial.println(jsonString);
   return jsonString;
 }
 

@@ -4,10 +4,14 @@ import { Alarm } from './alarm.entity';
 import { CreateAlarmDto } from './dto/createAlarm.dto';
 import { UpdateAlarmDto } from './dto/updateAlarm.dto';
 import { Component } from '../components/component.entity';
+import { MqttService } from '../mqtt/mqtt.service';
 
 @Injectable()
 export class AlarmsService {
-    constructor(@Inject(ALARM_REPOSITORY) private readonly alarmRepository: typeof Alarm) { }
+    constructor(
+        @Inject(ALARM_REPOSITORY) private readonly alarmRepository: typeof Alarm,
+        private readonly mqttService: MqttService
+    ) { }
 
     async create(createAlarmDto: CreateAlarmDto, userId: number) {
         return await this.alarmRepository.create<Alarm>({ ...createAlarmDto, userId });
@@ -56,6 +60,7 @@ export class AlarmsService {
         if (!alarm) {
             throw new BadRequestException('Alarm not found')
         }
+        this.mqttService.publish(`/deactivate/${alarm.uuid}`, "")
         alarm.activated = false
         const currentDate = new Date()
         currentDate.setDate(currentDate.getDate() + 1)

@@ -12,7 +12,7 @@
 AsyncWebServer server(80);
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
-const char broker[] = "192.168.214.190";
+const char broker[] = "192.168.113.190";
 int port = 1883;
 const char topic_component[] = "/component/data";
 const char topic_active_component[] = "/component/new";
@@ -21,7 +21,7 @@ const char topic_validate_uuid[] = "/validate/";
 JSONVar readings;
 unsigned long lastTime = 0;
 unsigned long lastTimeAlarm = 0;
-unsigned long timerDelay = 30000;
+unsigned long timerDelay = 15000;
 DHT dht(5, DHT11); // pin D1
 String my_uuid_capteur = "uuid8cpt1";
 String my_uuid_alarm = "uuid8alr1";

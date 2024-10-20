@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <WiFiClient.h>
 //#include <PubSubClient.h>
 #include <Arduino_JSON.h>
 #include <ESPAsyncTCP.h>
@@ -8,11 +9,44 @@
 #include <ESPConnect.h>
 #include <ArduinoMqttClient.h>
 #include "DHT.h"
+#include <ESP8266mDNS.h>
+#include <PubSubClient.h>
+
+const char caCert[] PROGMEM = R"EOF(
+-----BEGIN CERTIFICATE-----
+MIIDcTCCAlkCFCUQnuGJ3Zb53stIH9QcesBLpLeeMA0GCSqGSIb3DQEBCwUAMHUx
+CzAJBgNVBAYTAkZSMRYwFAYDVQQIDA1JbGUgZGUgRnJhbmNlMQ4wDAYDVQQHDAVQ
+YXJpczEQMA4GA1UECgwHQmFjY2h1czEUMBIGA1UECwwLQmFjY2h1c19pb3QxFjAU
+BgNVBAMMDW5vZGUxLmVtcXguaW8wHhcNMjQxMDA3MjEzNjE3WhcNMjUxMDA3MjEz
+NjE3WjB1MQswCQYDVQQGEwJGUjEWMBQGA1UECAwNSWxlIGRlIEZyYW5jZTEOMAwG
+A1UEBwwFUGFyaXMxEDAOBgNVBAoMB0JhY2NodXMxFDASBgNVBAsMC0JhY2NodXNf
+aW90MRYwFAYDVQQDDA1ub2RlMS5lbXF4LmlvMIIBIjANBgkqhkiG9w0BAQEFAAOC
+AQ8AMIIBCgKCAQEAmx+PPruct+LHOOXoYcfBfza6U3DIB9lG1WYMYSK8j/jeWKnm
+WjnWtMAFAfzPuXxPplztkNP00WB3ORTNNmzA85rm9GVUEBdukwPK5b6ZcNM0DKpB
+4O7bSIEa1GVHUz96oE2ddTpxxmgI1sVbNeKobLAYyQaaAcdjd1YkyWuXzUdo54us
+7TkHoNJ2c8AaxwgL+qRuhIt4XEXhEnk27P0z6v2LI31EdHaXKNBwkxqYOVqj0i72
+oytKqRdof9cI7HsdaWtytj97kW44YTBALM0sIOx32TIiw6DNc9WjQVjayvo609im
+1NcpvYYjJJHiOIeHsUpfs5ndzGPHkvcnivKk+wIDAQABMA0GCSqGSIb3DQEBCwUA
+A4IBAQCDcIPEQCDd4C2ZVZgvuUNd86AcRC/PZ6VGjhYVl6XYUWUSU8MSFGwKW0Kr
+nFYxZhTCQivK6OSrseUjSmYWM00cEsc9YspBnRWCoRGAjxO+ni/nWb5pNxhy10p7
++QhV2Z0bF0toKJHlWwTR1J8rbAsfIasa+NxM37gKn2TSTtdyxVaWLddOP+6bIq4E
+5Jg0zCEdJkQrR2oygf7OX/CnFfYF/+FQaGXVnKRzZFzusihPUwKCVI4nxpcSFGfc
+WhOfnHOkTam98P8Haldwz+ft3hnv6sBik5p0rFBCCpmzOIqLEi7C2Olc50rTq1tA
+vwvzQSc3quFKX2bcNWb3yXtCMgsa
+-----END CERTIFICATE-----
+)EOF";
+const uint8_t mqttCertFingerprint[] = {
+    0x2C, 0xDB, 0x7C, 0xBA, 0x72, 0x70, 0xBC, 0x6A, 0xBB, 0xEB,
+    0xF5, 0x92, 0xB8, 0x5F, 0x8C, 0xE3, 0x3B, 0xA0, 0x45, 0xA6
+};
+
 
 AsyncWebServer server(80);
-WiFiClient wifiClient;
+X509List caCertX509(caCert); 
+WiFiClientSecure wifiClient;
+wifiClient.setInsecure();
 MqttClient mqttClient(wifiClient);
-const char broker[] = "192.168.113.190";
+const char broker[] = "192.168.60.190";
 int port = 1883;
 const char topic_component[] = "/component/data";
 const char topic_active_component[] = "/component/new";
@@ -29,6 +63,8 @@ const char topic_activate_alarm[] = "/activate/uuid8alr1";
 const char topic_deactivate_alarm[] = "/deactivate/uuid8alr1";
 #define LED_PIN 4 // pin D2
 #define FAN_PIN 2 // pin D4
+uint32_t my_uuid = ESP.getChipId();
+bool set_user = true;
 
 String validate()
 {
@@ -97,8 +133,44 @@ void messages(int messageSize)
   }
 }
 
+void initFS(void)
+{
+  if (!LittleFS.begin()) {
+    Serial.println("An error has occurred while mounting LittleFS");
+  }
+  Serial.println("LittleFS mounted successfully");
+  File file = LittleFS.open("/index.html", "r");
+  if(!file){
+    Serial.println("Failed to open file for reading");
+    return;
+  }
+}
+
+void initDNS()
+{
+  if (!MDNS.begin("bacchus")) {  // Replace "esp8266" with the desired local name
+    Serial.println("Error setting up mDNS responder");
+  }
+  MDNS.addService("http", "tcp", 80);
+}
+
 void setup_devices(void) {
   dht.begin();
+  initFS();
+  initDNS();
+  /*wifiClient.setTrustAnchors(&caCertX509);
+  wifiClient.allowSelfSignedCerts();
+  wifiClient.setFingerprint(mqttCertFingerprint);
+  bool success = false;
+  Serial.print("Verifying TLS connection to ");
+  Serial.println("192.168.1.128");
+  success = wifiClient.connect(broker, port);
+  if (success) {
+    Serial.println("Connection complete, valid cert, valid fingerprint.");
+  }
+  else {
+    Serial.println("Connection failed!");
+  }*/
   if (!mqttClient.connect(broker, port)) {
      Serial.println("Failed to connect to MQTT");
   }
@@ -112,7 +184,7 @@ void setup_devices(void) {
 void setup()
 {
   Serial.begin(115200);
-  //server.begin();
+  server.begin();
   ESPConnect.autoConnect("Bacchus", "NOGU2024", 60000000);
   if(ESPConnect.begin(&server)){
     Serial.println("Connected to WiFi");
@@ -125,6 +197,25 @@ void setup()
   pinMode(FAN_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW); 
   digitalWrite(FAN_PIN, LOW);
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->redirect("/login.html");
+  });
+  server.on("/login.html", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(LittleFS, "/login.html", "text/html");
+  });
+  server.on("/signup.html", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(LittleFS, "/signup.html", "text/html");
+  });
+  server.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(LittleFS, "/style.css", "text/css");
+  });
+  server.on("/script.js", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(LittleFS, "/script.js", "application/javascript");
+  });
+  server.on("/getUUID", HTTP_GET, [](AsyncWebServerRequest *request){
+      String uuid = "{\"uuid\": \"" + String(my_uuid, HEX) + "\"}";  // UUID en hexadécimal
+      request->send(200, "application/json", uuid);
+  });
 }
 
 String getSensorReadings(void)
@@ -150,13 +241,16 @@ void send_data(void)
 
 void loop()
 {
+  MDNS.update();
   if (!mqttClient.connected()) {
     if (mqttClient.connect(broker, port)) {
       Serial.println("Reconnected to MQTT broker");
       mqttClient.subscribe(topic_check_uuid + my_uuid_capteur);
       mqttClient.subscribe(topic_check_uuid + my_uuid_alarm);
     } else {
+      int errorCode = mqttClient.state();
       Serial.print("Failed to reconnect, error state: ");
+      Serial.println(errorCode);
       delay(5000);
     }
   }

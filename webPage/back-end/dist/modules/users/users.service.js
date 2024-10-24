@@ -21,16 +21,19 @@ const component_entity_1 = require("../components/component.entity");
 const components_service_1 = require("../components/components.service");
 const mqtt_service_1 = require("../mqtt/mqtt.service");
 const token_service_1 = require("../token/token.service");
+const mail_service_1 = require("../mail/mail.service");
+const event_emitter_1 = require("@nestjs/event-emitter");
 let UsersService = class UsersService {
-    constructor(userRepository, tokenService, componentService, alarmService, mqttService) {
+    constructor(userRepository, tokenService, componentService, alarmService, mqttService, mailService) {
         this.userRepository = userRepository;
         this.tokenService = tokenService;
         this.componentService = componentService;
         this.alarmService = alarmService;
         this.mqttService = mqttService;
+        this.mailService = mailService;
     }
     async create(user) {
-        return await this.userRepository.create(Object.assign(Object.assign({}, user), { role: 'admin' }));
+        return await this.userRepository.create(user);
     }
     async findAll() {
         console.log('getting all users');
@@ -42,28 +45,32 @@ let UsersService = class UsersService {
     async findOneById(id) {
         return await this.userRepository.findOne({ where: { id }, include: component_entity_1.Component });
     }
+    async notifyUser(payload) {
+        const user = await this.userRepository.findOne({ where: { id: payload.userId } });
+        const mailBody = `Bonjour ${user.name},<br><br>
+
+        Le régulateur '${payload.alarmName}' a été activé.<br>
+        Si vous souhaiter qu'il reste éteint, vous pouvez le désactiver manuellemenent.<br><br>
+        
+        A bientôt !`;
+        await this.mailService.sendMail({ address: [user.email], subject: 'Régulateur activé', text: mailBody, from: "L'équipe Bacchus" });
+    }
     async registerComponent(id, uuid) {
-        this.mqttService.subscribeToTopic(`/validate/${uuid}`);
-        this.mqttService.publish(`/check/${uuid}`, JSON.stringify({ userId: id }));
-        const message = await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new common_1.BadRequestException('Timeout: No response received from the MQTT broker.'));
-            }, 5000);
-            this.mqttService.setMessageCallback((topic, payload) => {
-                if (topic === `/validate/${uuid}`) {
-                    clearTimeout(timeout);
-                    resolve(payload);
-                }
-            });
-        });
-        if (!JSON.parse(message).validate) {
-            throw new common_1.BadRequestException();
-        }
         const user = await this.userRepository.findOne({ where: { id }, include: component_entity_1.Component });
         if (!user) {
             throw new common_1.BadRequestException('User is unknown');
         }
         const component = await this.componentService.create({ uuid: uuid, name: "Nouveau Capteur", data: undefined }, id);
+        if (!component) {
+            throw new common_1.BadRequestException('Error while creating new component');
+        }
+        const mailBody = `Bonjour ${user.name},<br><br>
+
+        Votre nouveau capteur a été ajouté avec succès.<br>
+        Merci de faire confiance à nos service.<br><br>
+        
+        A bientôt !`;
+        await this.mailService.sendMail({ address: [user.email], subject: 'Nouveau capteur ajouté !', text: mailBody, from: "L'équipe Bacchus" });
         user.components.push(component);
         return user.save();
     }
@@ -75,27 +82,18 @@ let UsersService = class UsersService {
         return user.components;
     }
     async registerAlarm(id, uuid) {
-        this.mqttService.subscribeToTopic(`/validate/${uuid}`);
-        this.mqttService.publish(`/check/${uuid}`, JSON.stringify({ userId: id }));
-        const message = await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new common_1.BadRequestException('Timeout: No response received from the MQTT broker.'));
-            }, 5000);
-            this.mqttService.setMessageCallback((topic, payload) => {
-                if (topic === `/validate/${uuid}`) {
-                    clearTimeout(timeout);
-                    resolve(payload);
-                }
-            });
-        });
-        if (!JSON.parse(message).validate) {
-            throw new common_1.BadRequestException();
-        }
         const user = await this.userRepository.findOne({ where: { id }, include: alarm_entity_1.Alarm });
         if (!user) {
             throw new common_1.BadRequestException('User is unknown');
         }
         const alarm = await this.alarmService.create({ uuid, name: 'Nouveau Régulateur', activated: false }, id);
+        const mailBody = `Bonjour ${user.name},<br><br>
+
+        Votre nouveau régulateur a été ajouté avec succès.<br>
+        Merci de faire confiance à nos service.<br><br>
+        
+        A bientôt !`;
+        await this.mailService.sendMail({ address: [user.email], subject: 'Nouveau régulateur ajouté !', text: mailBody, from: "L'équipe Bacchus" });
         user.alarms.push(alarm);
         return user.save();
     }
@@ -117,13 +115,20 @@ let UsersService = class UsersService {
         return await this.userRepository.destroy();
     }
 };
+__decorate([
+    (0, event_emitter_1.OnEvent)('notify.activation'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersService.prototype, "notifyUser", null);
 UsersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(constants_1.USER_REPOSITORY)),
     __metadata("design:paramtypes", [Object, token_service_1.TokenService,
         components_service_1.ComponentsService,
         alarm_service_1.AlarmsService,
-        mqtt_service_1.MqttService])
+        mqtt_service_1.MqttService,
+        mail_service_1.MailService])
 ], UsersService);
 exports.UsersService = UsersService;
 //# sourceMappingURL=users.service.js.map

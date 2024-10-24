@@ -8,14 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AlarmsModule = void 0;
 const common_1 = require("@nestjs/common");
+const mail_module_1 = require("../mail/mail.module");
+const mqtt_module_1 = require("../mqtt/mqtt.module");
+const alarm_controller_1 = require("./alarm.controller");
 const alarm_provider_1 = require("./alarm.provider");
 const alarm_service_1 = require("./alarm.service");
-const alarm_controller_1 = require("./alarm.controller");
 let AlarmsModule = class AlarmsModule {
 };
 AlarmsModule = __decorate([
     (0, common_1.Module)({
-        providers: [alarm_service_1.AlarmsService, ...alarm_provider_1.alarmProviders,],
+        imports: [mqtt_module_1.MqttModule, mail_module_1.MailModule],
+        providers: [alarm_service_1.AlarmsService, ...alarm_provider_1.alarmProviders],
         exports: [alarm_service_1.AlarmsService],
         controllers: [alarm_controller_1.AlarmsController]
     })

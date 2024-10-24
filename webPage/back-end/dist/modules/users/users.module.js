@@ -18,11 +18,12 @@ const component_provider_1 = require("../components/component.provider");
 const alarm_service_1 = require("../alarms/alarm.service");
 const alarm_provider_1 = require("../alarms/alarm.provider");
 const mqtt_module_1 = require("../mqtt/mqtt.module");
+const mail_module_1 = require("../mail/mail.module");
 let UsersModule = class UsersModule {
 };
 UsersModule = __decorate([
     (0, common_1.Module)({
-        imports: [mqtt_module_1.MqttModule],
+        imports: [mqtt_module_1.MqttModule, mail_module_1.MailModule],
         providers: [users_service_1.UsersService, ...users_provider_1.usersProviders, token_service_1.TokenService, ...token_provider_1.tokenProviders, components_service_1.ComponentsService, ...component_provider_1.componentProviders, alarm_service_1.AlarmsService, ...alarm_provider_1.alarmProviders],
         exports: [users_service_1.UsersService],
         controllers: [users_controller_1.UsersController]

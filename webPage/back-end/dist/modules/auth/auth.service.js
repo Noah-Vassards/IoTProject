@@ -22,10 +22,10 @@ var __rest = (this && this.__rest) || function (s, e) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-const bcrypt = require("bcrypt");
 const jwt_1 = require("@nestjs/jwt");
-const users_service_1 = require("../users/users.service");
+const bcrypt = require("bcrypt");
 const token_service_1 = require("../token/token.service");
+const users_service_1 = require("../users/users.service");
 let AuthService = class AuthService {
     constructor(userService, tokenService, jwtService) {
         this.userService = userService;
@@ -49,31 +49,29 @@ let AuthService = class AuthService {
         const _a = user['dataValues'], { password } = _a, result = __rest(_a, ["password"]);
         return result;
     }
-    async login(userInfo) {
-        console.info("user", userInfo);
-        const userToken = await this.tokenService.findOneByUserId(userInfo.id);
-        const currentDate = new Date();
-        if (currentDate.getTime() < userToken.expiration_date.getTime()) {
-            console.log('token not expired');
-            return { user: userInfo, token: userToken.access_token };
+    async login(user, uuid) {
+        const userToken = await this.tokenService.findOneByUserId(user.id);
+        const newToken = await this.generateToken(user);
+        if (uuid) {
+            console.log('creating new component');
+            await this.userService.registerComponent(user.id, uuid);
         }
-        const newToken = await this.generateToken(userInfo);
         await this.tokenService.updateToken(userToken, newToken);
-        return { user: userInfo, token: newToken };
+        return { user: user, token: newToken };
     }
-    async create(user) {
-        const pass = await this.hashPassword(user.password);
-        const newUser = await this.userService.create(Object.assign(Object.assign({}, user), { password: pass }));
+    async create(signUpDto) {
+        const userInfos = { email: signUpDto.email, name: signUpDto.name };
+        const pass = await this.hashPassword(signUpDto.password);
+        const newUser = await this.userService.create(Object.assign(Object.assign({}, userInfos), { password: pass }));
         const _a = newUser['dataValues'], { password } = _a, result = __rest(_a, ["password"]);
-        console.log('----------------');
-        console.log(result);
         const token = await this.generateToken(result);
-        console.log(token);
         let date = new Date();
         date.setDate(date.getDate() + 7);
         console.log(date);
-        const newToken = await this.tokenService.create({ access_token: token, expiration_date: date }, result.id);
-        console.log(newToken['dataValues']);
+        await this.tokenService.create({ access_token: token, expiration_date: date }, newUser.id);
+        if (signUpDto.uuid) {
+            await this.userService.registerComponent(newUser.id, signUpDto.uuid);
+        }
         return { user: result, token };
     }
     async generateToken(user) {

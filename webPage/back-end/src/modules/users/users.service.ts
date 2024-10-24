@@ -10,6 +10,8 @@ import { MqttService } from '../mqtt/mqtt.service';
 import { TokenService } from '../token/token.service';
 import { UserDto } from './dto/user.dto';
 import { User } from './users.entity';
+import { MailService } from '../mail/mail.service';
+import { OnEvent } from '@nestjs/event-emitter';
 
 
 
@@ -28,7 +30,8 @@ export class UsersService {
         private readonly tokenService: TokenService,
         private readonly componentService: ComponentsService,
         private readonly alarmService: AlarmsService,
-        private readonly mqttService: MqttService
+        private readonly mqttService: MqttService,
+        private readonly mailService: MailService,
     ) { }
 
     /**
@@ -67,31 +70,55 @@ export class UsersService {
         return await this.userRepository.findOne<User>({ where: { id }, include: Component });
     }
 
-    async registerComponent(id: number, uuid: string): Promise<User> {
-        this.mqttService.subscribeToTopic(`/validate/${uuid}`)
-        this.mqttService.publish(`/check/${uuid}`, JSON.stringify({userId: id}))
+    @OnEvent('notify.activation')
+    async notifyUser(payload: { userId: number, alarmName: string }) {
+        const user = await this.userRepository.findOne({ where: { id: payload.userId } })
+        const mailBody = `Bonjour ${user.name},<br><br>
 
-        const message = await new Promise<string>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new BadRequestException('Timeout: No response received from the MQTT broker.'));
-            }, 5000);
-    
-            this.mqttService.setMessageCallback((topic: string, payload: string) => {
-                if (topic === `/validate/${uuid}`) {
-                    clearTimeout(timeout);
-                    resolve(payload);
-                }
-            });
-        });
-    
-        if (!JSON.parse(message).validate) {
-            throw new BadRequestException()
-        }
+        Le régulateur '${payload.alarmName}' a été activé.<br>
+        Si vous souhaiter qu'il reste éteint, vous pouvez le désactiver manuellemenent.<br><br>
+        
+        A bientôt !`
+        await this.mailService.sendMail({ address: [user.email], subject: 'Régulateur activé', text: mailBody, from: "L'équipe Bacchus" })
+    }
+
+    async registerComponent(id: number, uuid: string): Promise<User> {
+        // this.mqttService.subscribeToTopic(`/validate/${uuid}`)
+        // this.mqttService.publish(`/check/${uuid}`, JSON.stringify({userId: id}))
+
+        // const message = await new Promise<string>((resolve, reject) => {
+        //     const timeout = setTimeout(() => {
+        //         reject(new BadRequestException('Timeout: No response received from the MQTT broker.'));
+        //     }, 5000);
+
+        //     this.mqttService.setMessageCallback((topic: string, payload: string) => {
+        //         if (topic === `/validate/${uuid}`) {
+        //             clearTimeout(timeout);
+        //             resolve(payload);
+        //         }
+        //     });
+        // });
+
+        // if (!JSON.parse(message).validate) {
+        //     throw new BadRequestException()
+        // }
         const user = await this.userRepository.findOne<User>({ where: { id }, include: Component });
         if (!user) {
             throw new BadRequestException('User is unknown')
         }
-        const component = await this.componentService.create({uuid: uuid, name: "Nouveau Capteur", data: undefined}, id);
+        const component = await this.componentService.create({ uuid: uuid, name: "Nouveau Capteur", data: undefined }, id);
+
+        if (!component) {
+            throw new BadRequestException('Error while creating new component')
+        }
+
+        const mailBody = `Bonjour ${user.name},<br><br>
+
+        Votre nouveau capteur a été ajouté avec succès.<br>
+        Merci de faire confiance à nos service.<br><br>
+        
+        A bientôt !`
+        await this.mailService.sendMail({ address: [user.email], subject: 'Nouveau capteur ajouté !', text: mailBody, from: "L'équipe Bacchus" })
 
         user.components.push(component)
         return user.save()
@@ -108,30 +135,38 @@ export class UsersService {
     }
 
     async registerAlarm(id: number, uuid: string): Promise<User> {
-        this.mqttService.subscribeToTopic(`/validate/${uuid}`)
-        this.mqttService.publish(`/check/${uuid}`, JSON.stringify({userId: id}))
+        // this.mqttService.subscribeToTopic(`/validate/${uuid}`)
+        // this.mqttService.publish(`/check/${uuid}`, JSON.stringify({ userId: id }))
 
-        const message = await new Promise<string>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new BadRequestException('Timeout: No response received from the MQTT broker.'));
-            }, 5000);
-    
-            this.mqttService.setMessageCallback((topic: string, payload: string) => {
-                if (topic === `/validate/${uuid}`) {
-                    clearTimeout(timeout);
-                    resolve(payload);
-                }
-            });
-        });
-    
-        if (!JSON.parse(message).validate) {
-            throw new BadRequestException()
-        }
+        // const message = await new Promise<string>((resolve, reject) => {
+        //     const timeout = setTimeout(() => {
+        //         reject(new BadRequestException('Timeout: No response received from the MQTT broker.'));
+        //     }, 5000);
+
+        //     this.mqttService.setMessageCallback((topic: string, payload: string) => {
+        //         if (topic === `/validate/${uuid}`) {
+        //             clearTimeout(timeout);
+        //             resolve(payload);
+        //         }
+        //     });
+        // });
+
+        // if (!JSON.parse(message).validate) {
+        //     throw new BadRequestException()
+        // }
         const user = await this.userRepository.findOne<User>({ where: { id }, include: Alarm });
         if (!user) {
             throw new BadRequestException('User is unknown')
         }
-        const alarm = await this.alarmService.create({uuid, name: 'Nouveau Régulateur', activated: false}, id);
+        const alarm = await this.alarmService.create({ uuid, name: 'Nouveau Régulateur', activated: false }, id);
+
+        const mailBody = `Bonjour ${user.name},<br><br>
+
+        Votre nouveau régulateur a été ajouté avec succès.<br>
+        Merci de faire confiance à nos service.<br><br>
+        
+        A bientôt !`
+        await this.mailService.sendMail({ address: [user.email], subject: 'Nouveau régulateur ajouté !', text: mailBody, from: "L'équipe Bacchus" })
 
         user.alarms.push(alarm)
         return user.save()

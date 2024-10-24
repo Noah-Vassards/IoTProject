@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ToastContainer, toast } from 'react-toastify';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
-import './Home.css'
+import './Home.css';
 
 async function fetchAlarms(token) {
     try {
@@ -38,36 +37,13 @@ async function fetchComponents(token) {
     }
 }
 
-async function addNewComponent(token, uuid, entity) {
-    try {
-        const response = await fetch(`http://localhost:3001/dev/users/${entity}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ uuid: uuid })
-        })
-        if (response.ok) {
-            return { status: 'Success', message: 'Le composant à été ajouté avec succès' }
-        }
-        return { status: 'Error', message: "Un problème est survenu lors de l'ajout du composant.\nVeuillez vérifier que l'uuid entré soit correcte" }
-    } catch (e) {
-        console.log(e)
-        return { status: 'Error', message: "Un problème est survenu lors de l'ajout du composant.\nVeuillez vérifier que l'uuid entré soit correcte" }
-    }
-}
-
 export default function Home() {
     const navigate = useNavigate()
     const token = localStorage.getItem('token')
     const [components, setComponents] = useState([])
     const [alarms, setAlarms] = useState([])
     const [selected, setSelected] = useState('components')
-    const [openModal, setOpenModal] = useState(false)
-    const [newUuid, setNewUuid] = useState('')
-    const [notifMessage, setNotifMessage] = useState('')
-
+  
     const onDisconnect = () => {
         navigate('/login')
     }
@@ -76,42 +52,6 @@ export default function Home() {
         setSelected(selected)
     }
 
-    const onClickNew = () => {
-        setOpenModal(!openModal)
-        setNewUuid('')
-    }
-
-    const onAddNew = () => {
-        async function fetchData() {
-            const res = await addNewComponent(token, newUuid, selected)
-            console.log(res)
-            setNotifMessage(res)
-            if (res.status === 'Success') {
-                setComponents(await fetchComponents(token))
-                setAlarms(await fetchAlarms(token))
-            }
-        }
-        fetchData()
-        setOpenModal(false)
-        setNewUuid('')
-    }
-
-    useEffect(() => {
-        if (!notifMessage.message)
-            return
-        if (notifMessage.status === 'Success')
-            toast.success(notifMessage.message);
-        else
-            toast.error(notifMessage.message)
-    }, [notifMessage])
-
-    useEffect(() => {
-        var e = document.getElementsByClassName('modal')[0];
-        if (!openModal)
-            e.style.display = 'none';
-        else
-            e.style.display = 'flex';
-    }, [openModal])
 
     useEffect(() => {
         const components = document.getElementById('components')
@@ -148,13 +88,6 @@ export default function Home() {
             setComponents(await fetchComponents(token))
             setAlarms(await fetchAlarms(token))
         }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                setOpenModal(false)
-            }
-        })
-
         if (!token) {
             navigate('/login')
         }
@@ -164,11 +97,6 @@ export default function Home() {
 
     return (
         <div className="home">
-            <ToastContainer />
-            <div className='modal'>
-                <input value={newUuid} onChange={(e) => setNewUuid(e.target.value)} placeholder={`Entrer l'uuid du ${selected === 'components' ? 'capteur' : 'régulateur'}`}></input>
-                <button onClick={onAddNew} disabled={!newUuid.length}>Ajouter</button>
-            </div>
             <div className="header">
                 <p>Bacchus</p>
                 <div className="disconnect" onClick={onDisconnect}>
@@ -180,7 +108,6 @@ export default function Home() {
                     <div className='grid-header'>
                         <div className='grid-selector' id="components" onClick={() => onClick('components')}><p>Capteurs</p></div>
                         <div className='grid-selector' id='alarms' onClick={() => onClick('alarms')}><p>Regulateurs</p></div>
-                        <button id='add-button' onClick={onClickNew}>Ajouter nouveau</button>
                     </div>
                     {selected === 'components' ?
                         <div className='grid-body'>

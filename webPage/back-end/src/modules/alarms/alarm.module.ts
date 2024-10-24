@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
+import { MailModule } from '../mail/mail.module';
+import { MqttModule } from '../mqtt/mqtt.module';
+import { AlarmsController } from './alarm.controller';
 import { alarmProviders } from './alarm.provider';
 import { AlarmsService } from './alarm.service';
-import { AlarmsController } from './alarm.controller';
-import { MqttModule } from '../mqtt/mqtt.module';
 
 @Module({
-    imports: [MqttModule],
-    providers: [AlarmsService, ...alarmProviders, ],
+    imports: [MqttModule, MailModule],
+    providers: [AlarmsService, ...alarmProviders],
     exports: [AlarmsService],
     controllers: [AlarmsController]
 })

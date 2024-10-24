@@ -6,17 +6,23 @@ import { MqttService } from '../mqtt/mqtt.service';
 import { TokenService } from '../token/token.service';
 import { UserDto } from './dto/user.dto';
 import { User } from './users.entity';
+import { MailService } from '../mail/mail.service';
 export declare class UsersService {
     private readonly userRepository;
     private readonly tokenService;
     private readonly componentService;
     private readonly alarmService;
     private readonly mqttService;
-    constructor(userRepository: typeof User, tokenService: TokenService, componentService: ComponentsService, alarmService: AlarmsService, mqttService: MqttService);
+    private readonly mailService;
+    constructor(userRepository: typeof User, tokenService: TokenService, componentService: ComponentsService, alarmService: AlarmsService, mqttService: MqttService, mailService: MailService);
     create(user: UserDto): Promise<User>;
     findAll(): Promise<User[]>;
     findOneByEmail(email: string): Promise<User>;
     findOneById(id: number): Promise<User>;
+    notifyUser(payload: {
+        userId: number;
+        alarmName: string;
+    }): Promise<void>;
     registerComponent(id: number, uuid: string): Promise<User>;
     findAllComponents(id: number): Promise<Component[]>;
     registerAlarm(id: number, uuid: string): Promise<User>;

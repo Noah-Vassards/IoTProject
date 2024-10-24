@@ -31,6 +31,11 @@ let ComponentsService = class ComponentsService {
         this.componentRepository = componentRepository;
     }
     async create(createComponentDto, userId) {
+        console.log(createComponentDto.uuid);
+        const component = await this.componentRepository.findOne({ where: { uuid: createComponentDto.uuid } });
+        if (component) {
+            return null;
+        }
         const { data } = createComponentDto, componentDto = __rest(createComponentDto, ["data"]);
         return await this.componentRepository.create(Object.assign(Object.assign({}, componentDto), { data: data ? [data] : [], userId }));
     }
@@ -44,8 +49,10 @@ let ComponentsService = class ComponentsService {
             console.error('Component not found');
             throw new common_1.BadRequestException('Component not found');
         }
+        console.log(component);
         console.log(updateComponentDto);
         await component.update(updateComponentDto);
+        console.log(component);
         return await component.save();
     }
     async newData(uuid, newData) {

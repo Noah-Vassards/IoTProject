@@ -16,9 +16,9 @@ export class UsersController {
     @UseGuards(DoesUserExist)
     @Delete('deleteByMail')
     async deleteByMail(@Request() req) {
-        if (req.user.role !== 'admin') {
-            throw new UnauthorizedException()
-        }
+        // if (req.user.role !== 'admin') {
+        //     throw new UnauthorizedException()
+        // }
         console.debug(req.query || req.body.email)
         return await this.usersService.delete(req.query.email || req.body.email)
     }

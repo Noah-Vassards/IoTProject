@@ -7,28 +7,28 @@
     padding: 20px;
 }
 
-.component-header > label {
+.component-header>label {
     font-size: larger
 }
 
-.component-header > input {
+.component-header>input {
     padding: 5px;
     font-size: larger;
     background-color: rgba(10, 10, 10, 0.2);
 }
 
-.component-header > input:not(:hover) {
+.component-header>input:not(:hover) {
     border: none;
 }
 
-.component-header > .button-container {
+.component-header>.button-container {
     position: absolute;
     right: 40px;
     top: 50%;
     transform: translate(0, -50%);
 }
 
-.button-container > button {
+.button-container>button {
     font-size: larger;
     padding: 5px;
     border: none;
@@ -37,7 +37,7 @@
     margin: 5px;
 }
 
-.button-container > button:hover {
+.button-container>button:hover {
     box-shadow: -1px -1px 0px 1px rgba(0, 0, 0, 0.3);
 }
 
@@ -71,7 +71,7 @@
     font-size: larger;
 }
 
-.component-selector > select {
+.component-selector>select {
     margin-left: 10px;
     font-size: large;
 }
@@ -81,7 +81,7 @@
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
-    margin-bottom: 20px;
+    margin-bottom: 100px;
 }
 
 .readings {
@@ -110,9 +110,28 @@
     margin-bottom: 10px;
 }
 
-.value-setter > div > input {
+.value-setter>div>input {
     height: 30px;
     width: 50px;
     margin: 5px;
     font-size: 20px;
+}
+
+.stats-container {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+}
+
+.stats-info {
+    background-color: white;
+    border-radius: 20px;
+}
+
+
+.chart-container {
+    background-color: white;
+    border-radius: 20px;
+    margin: 10px;
+    padding: 15px;
 }

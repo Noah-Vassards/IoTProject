@@ -9,6 +9,12 @@ export class ComponentsService {
     constructor(@Inject(COMPONENT_REPOSITORY) private readonly componentRepository: typeof Component) { }
 
     async create(createComponentDto: CreateComponentDto, userId: number) {
+        console.log(createComponentDto.uuid)
+        const component = await this.componentRepository.findOne({ where: { uuid: createComponentDto.uuid } })
+
+        if (component) {
+            return null
+        }
         const { data, ...componentDto } = createComponentDto
         return await this.componentRepository.create<Component>({ ...componentDto, data: data ? [data] : [], userId });
     }
@@ -25,8 +31,10 @@ export class ComponentsService {
             console.error('Component not found')
             throw new BadRequestException('Component not found')
         }
+        console.log(component)
         console.log(updateComponentDto)
         await component.update(updateComponentDto)
+        console.log(component)
         return await component.save()
     }
 

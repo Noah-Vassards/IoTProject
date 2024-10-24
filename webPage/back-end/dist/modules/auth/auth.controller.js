@@ -16,26 +16,27 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
-const user_dto_1 = require("../users/dto/user.dto");
 const doesUserExist_guards_1 = require("../../core/guards/doesUserExist.guards");
+const signup_dto_1 = require("./dto/signup.dto");
+const login_dto_1 = require("./dto/login.dto");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async login(request) {
-        return await this.authService.login(request.user);
+    async login(req, LoginDto) {
+        return await this.authService.login(req.user, LoginDto.uuid);
     }
-    async signUp(user) {
-        const userInfo = { email: user.email, password: user.password, name: user.name };
-        return await this.authService.create(userInfo);
+    async signUp(signUpDto) {
+        return await this.authService.create(signUpDto);
     }
 };
 __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, login_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -43,7 +44,7 @@ __decorate([
     (0, common_1.Post)('signup'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_dto_1.UserDto]),
+    __metadata("design:paramtypes", [signup_dto_1.SignUpDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signUp", null);
 AuthController = __decorate([

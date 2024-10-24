@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { UserDto } from '../users/dto/user.dto';
+import * as bcrypt from 'bcrypt';
 import { TokenService } from '../token/token.service';
+import { UserDto } from '../users/dto/user.dto';
 import { User } from '../users/users.entity';
+import { UsersService } from '../users/users.service';
+import { LoginDto } from './dto/login.dto';
+import { SignUpDto } from './dto/signup.dto';
 
 /**
  * Service responsible for authentication-related operations.
@@ -54,18 +56,18 @@ export class AuthService {
      * @param {User} user - The user object.
      * @returns {Promise<any>} - A promise resolving to the login response, including the user and token.
      */
-    public async login(userInfo: any): Promise<any> {
-        console.info("user", userInfo)
-        const userToken = await this.tokenService.findOneByUserId(userInfo.id)
-        const currentDate = new Date()
+    public async login(user: User, component: string, alarm: string): Promise<any> {
+        const userToken = await this.tokenService.findOneByUserId(user.id)
+        const newToken = await this.generateToken(user)
 
-        if (currentDate.getTime() < userToken.expiration_date.getTime()) {
-            console.log('token not expired')
-            return {user: userInfo, token: userToken.access_token}
+        if (component) {
+            await this.userService.registerComponent(user.id, component)
         }
-        const newToken = await this.generateToken(userInfo)
+        if (alarm) {
+            await this.userService.registerAlarm(user.id, alarm)
+        }
         await this.tokenService.updateToken(userToken, newToken)
-        return { user: userInfo, token: newToken};
+        return { user: user, token: newToken };
     }
 
     /**
@@ -73,31 +75,29 @@ export class AuthService {
      * @param {UserDto} user - The user data.
      * @returns {Promise<any>} - A promise resolving to the created user and token.
      */
-    public async create(user: UserDto): Promise<any> {
-        // hash the password
-        const pass = await this.hashPassword(user.password);
+    public async create(signUpDto: SignUpDto): Promise<any> {
+        const userInfos = { email: signUpDto.email, name: signUpDto.name }
 
-        // create the user
-        const newUser = await this.userService.create({ ...user, password: pass});
-
-        // tslint:disable-next-line: no-string-literal
+        const pass = await this.hashPassword(signUpDto.password);
+        const newUser = await this.userService.create({ ...userInfos, password: pass });
         const { password, ...result } = newUser['dataValues'];
 
-        console.log('----------------')
-        console.log(result)
-
-        // generate token
-
         const token = await this.generateToken(result);
-        console.log(token)
 
         let date = new Date();
         date.setDate(date.getDate() + 7);
         console.log(date)
 
-        const newToken = await this.tokenService.create({access_token: token, expiration_date: date}, result.id)
-        console.log(newToken['dataValues'])
-        // return the user and the token
+        await this.tokenService.create({ access_token: token, expiration_date: date }, newUser.id)
+
+        if (signUpDto.component) {
+            await this.userService.registerComponent(newUser.id, signUpDto.component)
+        }
+
+        if (signUpDto.alarm) {
+            await this.userService.registerAlarm(newUser.id, signUpDto.alarm)
+        }
+        
         return { user: result, token };
     }
 
@@ -107,7 +107,7 @@ export class AuthService {
      * @returns {Promise<any>} - A Promise resoling to the new generated token
      */
     private async generateToken(user: any): Promise<any> {
-        const token = await this.jwtService.signAsync({email: user.email, id: user.id, role: user.role});
+        const token = await this.jwtService.signAsync({ email: user.email, id: user.id, role: user.role });
         return token;
     }
 

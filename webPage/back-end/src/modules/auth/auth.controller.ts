@@ -5,6 +5,8 @@ import { UserDto } from '../users/dto/user.dto';
 import { DoesUserAlreadyExist, DoesUserExist, DoesUserIdExist } from '../../core/guards/doesUserExist.guards';
 import { Request } from 'express';
 import { IsAutenticated } from '../../core/guards/isAuthenticated.guards';
+import { SignUpDto } from './dto/signup.dto';
+import { LoginDto } from './dto/login.dto';
 
 /**
  * Controller responsible for handling authentication-related requests.
@@ -21,8 +23,8 @@ export class AuthController {
      */
     @UseGuards(AuthGuard('local'))
     @Post('login')
-    async login(@Req() request: Request) {
-        return await this.authService.login(request.user);
+    async login(@Req() req, @Body() LoginDto: LoginDto) {
+        return await this.authService.login(req.user, LoginDto.component, LoginDto.alarm);
     }
 
     /**
@@ -32,8 +34,7 @@ export class AuthController {
      */
     @UseGuards(DoesUserAlreadyExist)
     @Post('signup')
-    async signUp(@Body() user: UserDto) {
-        const userInfo: UserDto = { email: user.email, password: user.password, name: user.name }
-        return await this.authService.create(userInfo);
+    async signUp(@Body() signUpDto: SignUpDto) {
+        return await this.authService.create(signUpDto);
     }
 }

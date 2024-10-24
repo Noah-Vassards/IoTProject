@@ -1,10 +1,9 @@
-/// <reference types="cookie-parser" />
 import { AuthService } from './auth.service';
-import { UserDto } from '../users/dto/user.dto';
-import { Request } from 'express';
+import { SignUpDto } from './dto/signup.dto';
+import { LoginDto } from './dto/login.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
-    login(request: Request): Promise<any>;
-    signUp(user: UserDto): Promise<any>;
+    login(req: any, LoginDto: LoginDto): Promise<any>;
+    signUp(signUpDto: SignUpDto): Promise<any>;
 }

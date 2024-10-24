@@ -9,9 +9,10 @@ import { componentProviders } from '../components/component.provider';
 import { AlarmsService } from '../alarms/alarm.service';
 import { alarmProviders } from '../alarms/alarm.provider';
 import { MqttModule } from '../mqtt/mqtt.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-    imports: [MqttModule],
+    imports: [MqttModule, MailModule],
     providers: [UsersService, ...usersProviders, TokenService, ...tokenProviders, ComponentsService, ...componentProviders, AlarmsService, ...alarmProviders],
     exports: [UsersService],
     controllers: [UsersController]

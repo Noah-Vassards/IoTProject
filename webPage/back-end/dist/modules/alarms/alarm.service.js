@@ -15,11 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AlarmsService = void 0;
 const common_1 = require("@nestjs/common");
 const constants_1 = require("../../core/constants");
+const mqtt_service_1 = require("../mqtt/mqtt.service");
+const event_emitter_1 = require("@nestjs/event-emitter");
 let AlarmsService = class AlarmsService {
-    constructor(alarmRepository) {
+    constructor(alarmRepository, mqttService, eventEmitter) {
         this.alarmRepository = alarmRepository;
+        this.mqttService = mqttService;
+        this.eventEmitter = eventEmitter;
     }
     async create(createAlarmDto, userId) {
+        const alarm = this.alarmRepository.findOne({ where: { uuid: createAlarmDto.uuid } });
+        if (alarm) {
+            throw new common_1.BadRequestException('Alarm already exists');
+        }
         return await this.alarmRepository.create(Object.assign(Object.assign({}, createAlarmDto), { userId }));
     }
     async findOneByUuid(uuid) {
@@ -42,12 +50,14 @@ let AlarmsService = class AlarmsService {
         if (!alarm) {
             throw new common_1.BadRequestException('Alarm not found');
         }
-        const date = new Date();
-        date.setDate(date.getDate() - 872);
-        alarm.disabledUntil = date;
-        if (alarm.disabledUntil && alarm.disabledUntil.getTime() < Date.now()) {
+        const canActivate = alarm.disabledUntil ? alarm.disabledUntil.getTime() < Date.now() : true;
+        console.log('---------------- > ', canActivate);
+        if (canActivate) {
             console.log(activation ? 'activation' : 'deactivation');
             alarm.activated = activation;
+            if (activation) {
+                this.eventEmitter.emit('notify.activation', { userId: alarm.userId, alarmName: alarm.name });
+            }
         }
         return await alarm.save();
     }
@@ -57,6 +67,7 @@ let AlarmsService = class AlarmsService {
         if (!alarm) {
             throw new common_1.BadRequestException('Alarm not found');
         }
+        this.mqttService.publish(`/deactivate/${alarm.uuid}`, "");
         alarm.activated = false;
         const currentDate = new Date();
         currentDate.setDate(currentDate.getDate() + 1);
@@ -70,7 +81,8 @@ let AlarmsService = class AlarmsService {
 AlarmsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)(constants_1.ALARM_REPOSITORY)),
-    __metadata("design:paramtypes", [Object])
+    __metadata("design:paramtypes", [Object, mqtt_service_1.MqttService,
+        event_emitter_1.EventEmitter2])
 ], AlarmsService);
 exports.AlarmsService = AlarmsService;
 //# sourceMappingURL=alarm.service.js.map

@@ -1,8 +1,8 @@
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { UserDto } from '../users/dto/user.dto';
 import { TokenService } from '../token/token.service';
 import { User } from '../users/users.entity';
+import { UsersService } from '../users/users.service';
+import { SignUpDto } from './dto/signup.dto';
 export declare class AuthService {
     private readonly userService;
     private readonly tokenService;
@@ -11,7 +11,7 @@ export declare class AuthService {
     validateUser(username: string, pass: string): Promise<{
         name: string;
         email: string;
-        role: "user" | "admin";
+        role: "admin" | "user";
         token: import("../token/token.entity").Token;
         components: import("../components/component.entity").Component[];
         alarms: import("../alarms/alarm.entity").Alarm[];
@@ -27,8 +27,8 @@ export declare class AuthService {
         sequelize: import("sequelize").Sequelize;
         _model: import("sequelize").Model<User, User>;
     }>;
-    login(userInfo: any): Promise<any>;
-    create(user: UserDto): Promise<any>;
+    login(user: User, uuid: string): Promise<any>;
+    create(signUpDto: SignUpDto): Promise<any>;
     private generateToken;
     private hashPassword;
     private comparePassword;

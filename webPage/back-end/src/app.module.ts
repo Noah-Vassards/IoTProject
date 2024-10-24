@@ -6,11 +6,13 @@ import { ComponentsModule } from './modules/components/components.module';
 import { UsersModule } from './modules/users/users.module';
 import { AlarmsModule } from './modules/alarms/alarm.module';
 import { MqttModule } from './modules/mqtt/mqtt.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
     // make the .env properties available throughout the application
     ConfigModule.forRoot({ isGlobal: true }),
+    MailModule,
     DatabaseModule,
     UsersModule,
     AuthModule,

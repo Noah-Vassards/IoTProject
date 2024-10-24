@@ -22,9 +22,6 @@ let UsersController = class UsersController {
         this.usersService = usersService;
     }
     async deleteByMail(req) {
-        if (req.user.role !== 'admin') {
-            throw new common_1.UnauthorizedException();
-        }
         console.debug(req.query || req.body.email);
         return await this.usersService.delete(req.query.email || req.body.email);
     }

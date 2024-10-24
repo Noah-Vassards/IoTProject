@@ -1,19 +1,25 @@
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ALARM_REPOSITORY } from 'src/core/constants';
+import { MqttService } from '../mqtt/mqtt.service';
 import { Alarm } from './alarm.entity';
 import { CreateAlarmDto } from './dto/createAlarm.dto';
 import { UpdateAlarmDto } from './dto/updateAlarm.dto';
-import { Component } from '../components/component.entity';
-import { MqttService } from '../mqtt/mqtt.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AlarmsService {
     constructor(
         @Inject(ALARM_REPOSITORY) private readonly alarmRepository: typeof Alarm,
-        private readonly mqttService: MqttService
+        private readonly mqttService: MqttService,
+        private readonly eventEmitter: EventEmitter2,
     ) { }
 
     async create(createAlarmDto: CreateAlarmDto, userId: number) {
+        const alarm = this.alarmRepository.findOne({ where: { uuid: createAlarmDto.uuid } })
+
+        if (alarm) {
+            throw new BadRequestException('Alarm already exists')
+        }
         return await this.alarmRepository.create<Alarm>({ ...createAlarmDto, userId });
     }
 
@@ -38,18 +44,24 @@ export class AlarmsService {
 
     async activate(uuid: string, activation: boolean) {
         const alarm = await this.alarmRepository.findOne({ where: { uuid } })
-        
+
         if (!alarm) {
             throw new BadRequestException('Alarm not found')
         }
-        const date = new Date()
-        date.setDate(date.getDate() - 872)
-        alarm.disabledUntil = date
-        
-        if (alarm.disabledUntil && alarm.disabledUntil.getTime() < Date.now()) {
+
+        const canActivate = alarm.disabledUntil ? alarm.disabledUntil.getTime() < Date.now() : true
+
+        console.log('---------------- > ', canActivate)
+
+        if (canActivate) {
             console.log(activation ? 'activation' : 'deactivation')
             alarm.activated = activation
+            if (activation) {
+                this.eventEmitter.emit('notify.activation', { userId: alarm.userId, alarmName: alarm.name })
+            }
         }
+
+
         return await alarm.save()
     }
 

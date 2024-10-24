@@ -3,15 +3,17 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import './ComponentStats.css';
 import GaugeReader from './GaugeReader';
 import { ToastContainer, toast } from 'react-toastify';
+import { LineChart } from '@mui/x-charts/LineChart';
 
 async function getNewInfo(token, uuid) {
     try {
         const response = await fetch(`http://localhost:3001/dev/components/${uuid}`, {
             method: 'GET',
-            headers: {'Authorization': `Bearer ${token}`}
+            headers: { 'Authorization': `Bearer ${token}` }
         })
         if (response.ok) {
             const data = await response.json()
+            console.log(data)
             return data
         }
     } catch (e) {
@@ -47,6 +49,16 @@ export default function ComponentStats() {
     const [name, setName] = useState('')
     const [readings, setReadings] = useState([])
     const [notifMessage, setNotifMessage] = useState('')
+    const [selectedTempReading, setSelectedTempReading] = useState('actual')
+    const [selectedHumidityReading, setSelectedHumidityReading] = useState('actual')
+
+    const onSelectTempReading = (value) => {
+        setSelectedTempReading(value)
+    }
+
+    const onSelectHumidityReading = (value) => {
+        setSelectedHumidityReading(value)
+    }
 
     const onDisconnect = () => {
         navigate('/login')
@@ -55,9 +67,9 @@ export default function ComponentStats() {
     const onSaveChanges = async () => {
         const res = await updateComponent(token, data.uuid, { name })
         if (res) {
-            setNotifMessage({status: 'Success', message: "Le capteur à été modifé avec succès"})
+            setNotifMessage({ status: 'Success', message: "Le capteur à été modifé avec succès" })
         } else {
-            setNotifMessage({status: 'Error', message: 'Une erreur est survenue lors de la modification du capteur\nVeuillez réessayer ulterieurement'})
+            setNotifMessage({ status: 'Error', message: 'Une erreur est survenue lors de la modification du capteur\nVeuillez réessayer ulterieurement' })
         }
     }
 
@@ -113,15 +125,59 @@ export default function ComponentStats() {
                 <div className='readings-container'>
                     <div className='readings'>
                         <p>Température</p>
-                        <GaugeReader height={300} width={300} value={readings[readings.length - 1]?.temperature ?? 0} format="°C" />
+                        <select value={selectedTempReading} onChange={(e) => onSelectTempReading(e.target.value)}>
+                            <option value={'actual'}>actuelle</option>
+                            <option value={'average'}>moyenne</option>
+                            <option value={'min-max'}>min-max</option>
+                        </select>
+                        <div style={{ display: selectedTempReading === 'actual' ? 'block' : 'none' }}>
+                            <GaugeReader height={300} width={300} value={readings[readings.length - 1]?.temperature ?? 0} format="°C" />
+                        </div>
+                        <div style={{ height: 300, width: 300, display: selectedTempReading === 'average' ? 'block' : 'none' }}>
+                            <label>38°C</label>
+                        </div>
+                        <div style={{ display: selectedTempReading === 'min-max' ? 'block' : 'none' }}>
+                            <label>12°C</label>
+                            <label>28°C</label>
+                        </div>
                     </div>
                     <div className='readings'>
                         <p>Humidité</p>
-                        <GaugeReader height={300} width={300} value={readings[readings.length - 1]?.humidity ?? 0} format="%" />
+                        <div style={{display: selectedTempReading === 'actual' ? 'block' : 'none' }}>
+                            <GaugeReader height={300} width={300} value={readings[readings.length - 1]?.humidity ?? 0} format="%" />
+                        </div>
                     </div>
                 </div>
+                <div className='chart-container'>
+                    <label>Température (°C)</label>
+                    <LineChart
+                        xAxis={[{ data: readings.map(i => i.date), scaleType: 'band' }]}
+                        series={[
+                            {
+                                data: readings.map(i => i.temperature)
+                            },
+                        ]}
+                        width={1170}
+                        height={500}
+                        margin={{ left: 100, right: 20, top: 30, bottom: 40 }}
+                    />
+                </div>
+                <div className='chart-container'>
+                    <label>Humidité (%)</label>
+                    <LineChart
+                        xAxis={[{ data: readings.map(i => i.date), scaleType: 'band' }]}
+                        series={[
+                            {
+                                data: readings.map(i => i.humidity),
+                            },
+                        ]}
+                        width={1170}
+                        height={500}
+                        margin={{ left: 100, right: 20, top: 30, bottom: 40 }}
+                    />
+                </div>
 
-                <div className='grid-container'>
+                {/* <div className='grid-container'>
                     <div className='grid-header'>
                         <label>Historique</label>
                     </div>
@@ -139,8 +195,8 @@ export default function ComponentStats() {
                             </div>
                         )}
                     </div>
-                </div>
+                </div> */}
             </div>
-        </div>
+        </div >
     )
 }

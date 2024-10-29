@@ -7,7 +7,7 @@ import { LineChart } from '@mui/x-charts/LineChart';
 
 async function getNewInfo(token, uuid) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/components/${uuid}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/components/${uuid}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -24,7 +24,7 @@ async function getNewInfo(token, uuid) {
 
 async function updateComponent(token, uuid, updates) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/components/${uuid}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/components/${uuid}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -54,6 +54,7 @@ export default function ComponentStats() {
 
     const onSelectTempReading = (value) => {
         setSelectedTempReading(value)
+        console.log(readings)
     }
 
     const onSelectHumidityReading = (value) => {
@@ -134,17 +135,37 @@ export default function ComponentStats() {
                             <GaugeReader height={300} width={300} value={readings[readings.length - 1]?.temperature ?? 0} format="°C" />
                         </div>
                         <div style={{ height: 300, width: 300, display: selectedTempReading === 'average' ? 'block' : 'none' }}>
-                            <label>38°C</label>
+                            <div className='value-container'>
+                                <label style={{fontSize: '60px'}}>{readings.reduce((prev, cur) => prev + cur.temperature, 0) / readings.length}°C</label>
+                            </div>
                         </div>
-                        <div style={{ display: selectedTempReading === 'min-max' ? 'block' : 'none' }}>
-                            <label>12°C</label>
-                            <label>28°C</label>
+                        <div style={{ height: 300, width: 300, display: selectedTempReading === 'min-max' ? 'block' : 'none' }}>
+                            <div className='value-container'>
+                                <label style={{fontSize: '60px'}}><label style={{fontSize: '40px'}}>min: </label>{Math.min(...readings.map(item => item.temperature))}°C</label>
+                                <label style={{fontSize: '60px'}}><label style={{fontSize: '40px'}}>max: </label>{Math.max(...readings.map(item => item.temperature))}°C</label>
+                            </div>
                         </div>
                     </div>
                     <div className='readings'>
                         <p>Humidité</p>
-                        <div style={{display: selectedTempReading === 'actual' ? 'block' : 'none' }}>
+                        <select value={selectedHumidityReading} onChange={(e) => onSelectHumidityReading(e.target.value)}>
+                            <option value={'actual'}>actuelle</option>
+                            <option value={'average'}>moyenne</option>
+                            <option value={'min-max'}>min-max</option>
+                        </select>
+                        <div style={{ display: selectedHumidityReading === 'actual' ? 'block' : 'none' }}>
                             <GaugeReader height={300} width={300} value={readings[readings.length - 1]?.humidity ?? 0} format="%" />
+                        </div>
+                        <div style={{ height: 300, width: 300, display: selectedHumidityReading === 'average' ? 'block' : 'none' }}>
+                            <div className='value-container'>
+                                <label style={{fontSize: '60px'}}>{readings.reduce((prev, cur) => prev + cur.humidity, 0) / readings.length}%</label>
+                            </div>
+                        </div>
+                        <div style={{ height: 300, width: 300, display: selectedHumidityReading === 'min-max' ? 'block' : 'none' }}>
+                            <div className='value-container'>
+                                <label style={{fontSize: '60px'}}><label style={{fontSize: '40px'}}>min: </label>{Math.min(...readings.map(item => item.humidity))}%</label>
+                                <label style={{fontSize: '60px'}}><label style={{fontSize: '40px'}}>max: </label>{Math.max(...readings.map(item => item.humidity))}%</label>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -6,9 +6,9 @@ import { ToastContainer, toast } from 'react-toastify';
 
 async function deactivation(token, uuid) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}/forceDeactivation`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/alarms/${uuid}/forceDeactivation`, {
             method: 'PATCH',
-            headers: {'Authorization': `Bearer ${token}`}
+            headers: { 'Authorization': `Bearer ${token}` }
         })
         if (response.ok) {
             return 1
@@ -22,9 +22,9 @@ async function deactivation(token, uuid) {
 
 async function getNewInfo(token, uuid) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/alarms/${uuid}`, {
             method: 'GET',
-            headers: {'Authorization': `Bearer ${token}`}
+            headers: { 'Authorization': `Bearer ${token}` }
         })
         if (response.ok) {
             const data = await response.json()
@@ -38,7 +38,7 @@ async function getNewInfo(token, uuid) {
 
 async function getUserComponents(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/components`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/users/components`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -87,6 +87,7 @@ export default function AlarmStats() {
     const [humidityRange, setHumidityRange] = useState(data?.humidityRange ?? [0, 100])
     const [name, setName] = useState(data?.name ?? 'Nouveau Capteur')
     const [activated, setActivated] = useState(data?.activated ?? false)
+    const [activations, setActivations] = useState(data?.activations ?? [])
     const [notifMessage, setNotifMessage] = useState('')
 
     const onDisconnect = () => {
@@ -96,9 +97,9 @@ export default function AlarmStats() {
     const onSaveChanges = async () => {
         const res = await updateAlarm(token, data.uuid, { name, temperatureRange, humidityRange, linkedComponentUuid })
         if (res) {
-            setNotifMessage({status: 'Success', message: "Le capteur à été modifé avec succès"})
+            setNotifMessage({ status: 'Success', message: "Le capteur à été modifé avec succès" })
         } else {
-            setNotifMessage({status: 'Error', message: 'Une erreur est survenue lors de la modification du capteur\nVeuillez réessayer ulterieurement'})
+            setNotifMessage({ status: 'Error', message: 'Une erreur est survenue lors de la modification du capteur\nVeuillez réessayer ulterieurement' })
         }
     }
 
@@ -110,9 +111,9 @@ export default function AlarmStats() {
         const res = await deactivation(token, data.uuid)
         if (res) {
             setActivated(false)
-            setNotifMessage({status: 'Success', message: "Le régulateur a été stoppé avec succès"})
+            setNotifMessage({ status: 'Success', message: "Le régulateur a été stoppé avec succès" })
         } else {
-            setNotifMessage({status: 'Error', message: "Le régulateur n'a pas pu être stoppé\nVeuillez réessayer ulterieurement"})
+            setNotifMessage({ status: 'Error', message: "Le régulateur n'a pas pu être stoppé\nVeuillez réessayer ulterieurement" })
         }
     }
 
@@ -130,6 +131,7 @@ export default function AlarmStats() {
             setComponents(await getUserComponents(token))
             const newInfos = await getNewInfo(token, data.uuid)
             setActivated(newInfos.activated)
+            setActivations(newInfos.activations)
         }
 
         if (token) {
@@ -199,26 +201,23 @@ export default function AlarmStats() {
                         </div>
                     </div>
                 </div>
-
-                {/* <div className='grid-container'>
-                        <div className='grid-header'>
-                            <label>Historique</label>
+                <div className='grid-container'>
+                    <div className='grid-header'>
+                        <label>Historique</label>
+                    </div>
+                    <div className='grid-body'>
+                        <div className='grid-row no-hover'>
+                            <p>activatedAt</p>
+                            <p>lasted</p>
                         </div>
-                        <div className='grid-body'>
-                            <div className='grid-row no-hover'>
-                                <p>date</p>
-                                <p>Temperature</p>
-                                <p>Humidité</p>
+                        {activations.map((a) =>
+                            <div key={a.date} className='grid-row no-hover'>
+                                <p>{a.activatedAt}</p>
+                                <p>{a.lasted}</p>
                             </div>
-                            {readings.map((d) =>
-                                <div key={d.date} className='grid-row no-hover'>
-                                    <p>{d.date}</p>
-                                    <p>{d.temperature}</p>
-                                    <p>{d.humidity}</p>
-                                </div>
-                            )}
-                        </div>
-                    </div> */}
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     )

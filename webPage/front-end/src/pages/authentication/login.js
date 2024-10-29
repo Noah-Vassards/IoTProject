@@ -15,7 +15,7 @@ export default function Login() {
 
     const onSubmit = async () => {
         try {
-            const response = await fetch('http://localhost:3001/dev/account/login', {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/account/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

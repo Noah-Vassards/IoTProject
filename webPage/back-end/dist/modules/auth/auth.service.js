@@ -49,12 +49,14 @@ let AuthService = class AuthService {
         const _a = user['dataValues'], { password } = _a, result = __rest(_a, ["password"]);
         return result;
     }
-    async login(user, uuid) {
+    async login(user, component, alarm) {
         const userToken = await this.tokenService.findOneByUserId(user.id);
         const newToken = await this.generateToken(user);
-        if (uuid) {
-            console.log('creating new component');
-            await this.userService.registerComponent(user.id, uuid);
+        if (component) {
+            await this.userService.registerComponent(user.id, component);
+        }
+        if (alarm) {
+            await this.userService.registerAlarm(user.id, alarm);
         }
         await this.tokenService.updateToken(userToken, newToken);
         return { user: user, token: newToken };
@@ -69,8 +71,11 @@ let AuthService = class AuthService {
         date.setDate(date.getDate() + 7);
         console.log(date);
         await this.tokenService.create({ access_token: token, expiration_date: date }, newUser.id);
-        if (signUpDto.uuid) {
-            await this.userService.registerComponent(newUser.id, signUpDto.uuid);
+        if (signUpDto.component) {
+            await this.userService.registerComponent(newUser.id, signUpDto.component);
+        }
+        if (signUpDto.alarm) {
+            await this.userService.registerAlarm(newUser.id, signUpDto.alarm);
         }
         return { user: result, token };
     }

@@ -53,13 +53,23 @@ let AlarmsService = class AlarmsService {
         const canActivate = alarm.disabledUntil ? alarm.disabledUntil.getTime() < Date.now() : true;
         console.log('---------------- > ', canActivate);
         if (canActivate) {
-            console.log(activation ? 'activation' : 'deactivation');
-            alarm.activated = activation;
-            if (activation) {
+            if (activation && !alarm.activated) {
                 this.eventEmitter.emit('notify.activation', { userId: alarm.userId, alarmName: alarm.name });
+                const date = new Date();
+                alarm.activations = [...alarm.activations, { activatedAt: date, lasted: 0 }];
+            }
+            else if (!activation && alarm.activated) {
+                const lastActivation = alarm.activations[alarm.activations.length - 1];
+                if (lastActivation) {
+                    const activatedAt = new Date(lastActivation.activatedAt);
+                    const lasted = (Date.now() - activatedAt.getTime()) / 1000;
+                    lastActivation.lasted = lasted;
+                    alarm.activations[alarm.activations.length - 1] = lastActivation;
+                }
             }
         }
-        return await alarm.save();
+        console.log(alarm.activations);
+        return await alarm.update({ activations: alarm.activations, activated: activation });
     }
     async forceDeactivation(uuid) {
         console.log('force deactivation');

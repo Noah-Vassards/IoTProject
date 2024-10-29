@@ -5,7 +5,7 @@ import * as cookieParser from 'cookie-parser';
 import { DEVELOPMENT, PRODUCTION, TEST } from './core/constants';
 import { databaseConfig } from './core/database/database.config';
 
-const port = 3001
+const port = process.env.PORT
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {cors: true});

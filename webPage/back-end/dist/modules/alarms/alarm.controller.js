@@ -30,7 +30,7 @@ let AlarmsController = class AlarmsController {
         return await this.alarmsService.update(uuid, updateAlarmDto);
     }
     async activate(uuid, activation) {
-        return await this.alarmsService.activate(uuid, activation);
+        return await this.alarmsService.activate(uuid, activation === 'true' ? true : false);
     }
     async forceDeactivation(uuid) {
         return await this.alarmsService.forceDeactivation(uuid);
@@ -65,7 +65,7 @@ __decorate([
     __param(0, (0, common_1.Param)('uuid')),
     __param(1, (0, common_1.Param)('activation')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Boolean]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], AlarmsController.prototype, "activate", null);
 __decorate([

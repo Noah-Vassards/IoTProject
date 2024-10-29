@@ -6,7 +6,7 @@ import './Home.css'
 
 async function fetchAlarms(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/alarms`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/users/alarms`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -23,7 +23,7 @@ async function fetchAlarms(token) {
 
 async function fetchComponents(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users/components`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/users/components`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -40,7 +40,7 @@ async function fetchComponents(token) {
 
 async function fetchUsers(token) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/users`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/users`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         })

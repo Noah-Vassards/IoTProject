@@ -58,7 +58,7 @@ async function getUserComponents(token) {
 
 async function updateAlarm(token, uuid, updates) {
     try {
-        const response = await fetch(`http://localhost:3001/dev/alarms/${uuid}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/dev/alarms/${uuid}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

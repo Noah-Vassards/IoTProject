@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
-//#include <PubSubClient.h>
 #include <Arduino_JSON.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -10,7 +9,6 @@
 #include <ArduinoMqttClient.h>
 #include "DHT.h"
 #include <ESP8266mDNS.h>
-#include <PubSubClient.h>
 
 const char caCert[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -44,10 +42,9 @@ const uint8_t mqttCertFingerprint[] = {
 AsyncWebServer server(80);
 X509List caCertX509(caCert); 
 WiFiClientSecure wifiClient;
-wifiClient.setInsecure();
 MqttClient mqttClient(wifiClient);
-const char broker[] = "192.168.60.190";
-int port = 1883;
+const char broker[] = "35.180.242.193";
+int port = 8883;
 const char topic_component[] = "/component/data";
 const char topic_active_component[] = "/component/new";
 const char topic_check_uuid[] = "/check/";
@@ -57,13 +54,14 @@ unsigned long lastTime = 0;
 unsigned long lastTimeAlarm = 0;
 unsigned long timerDelay = 15000;
 DHT dht(5, DHT11); // pin D1
-String my_uuid_capteur = "uuid8cpt1";
-String my_uuid_alarm = "uuid8alr1";
+
 const char topic_activate_alarm[] = "/activate/uuid8alr1";
 const char topic_deactivate_alarm[] = "/deactivate/uuid8alr1";
 #define LED_PIN 4 // pin D2
 #define FAN_PIN 2 // pin D4
 uint32_t my_uuid = ESP.getChipId();
+String my_uuid_capteur = String(my_uuid); // Convertir l'ID en String
+String my_uuid_alarm = my_uuid_capteur + "A"; // Concaténer "A" à l'UUID du capteur
 bool set_user = true;
 
 String validate()
@@ -139,17 +137,29 @@ void initFS(void)
     Serial.println("An error has occurred while mounting LittleFS");
   }
   Serial.println("LittleFS mounted successfully");
-  File file = LittleFS.open("/index.html", "r");
+  File file = LittleFS.open("/signup.html", "r");
   if(!file){
     Serial.println("Failed to open file for reading");
     return;
   }
 }
 
+void initDNSWifi()
+{
+  if (!MDNS.begin("bacchus_wifi")) {  // Replace "esp8266" with the desired local name
+    Serial.println("Error setting up mDNS responder");
+  } else {
+    Serial.println("SUCCES setting up mDNS responder");
+  }
+  MDNS.addService("http", "tcp", 80);
+}
+
 void initDNS()
 {
   if (!MDNS.begin("bacchus")) {  // Replace "esp8266" with the desired local name
     Serial.println("Error setting up mDNS responder");
+  } else {
+    Serial.println("SUCCES setting up mDNS responder");
   }
   MDNS.addService("http", "tcp", 80);
 }
@@ -157,20 +167,17 @@ void initDNS()
 void setup_devices(void) {
   dht.begin();
   initFS();
-  initDNS();
-  /*wifiClient.setTrustAnchors(&caCertX509);
+  wifiClient.setTrustAnchors(&caCertX509);
   wifiClient.allowSelfSignedCerts();
-  wifiClient.setFingerprint(mqttCertFingerprint);
   bool success = false;
-  Serial.print("Verifying TLS connection to ");
-  Serial.println("192.168.1.128");
+  Serial.print("Verifying TLS connection");
   success = wifiClient.connect(broker, port);
   if (success) {
     Serial.println("Connection complete, valid cert, valid fingerprint.");
   }
   else {
     Serial.println("Connection failed!");
-  }*/
+  }
   if (!mqttClient.connect(broker, port)) {
      Serial.println("Failed to connect to MQTT");
   }
@@ -184,13 +191,19 @@ void setup_devices(void) {
 void setup()
 {
   Serial.begin(115200);
-  server.begin();
-  ESPConnect.autoConnect("Bacchus", "NOGU2024", 60000000);
-  if(ESPConnect.begin(&server)){
-    Serial.println("Connected to WiFi");
-    Serial.println("IPAddress: "+WiFi.localIP().toString());
-  }else{
-    Serial.println("Failed to connect to WiFi");
+  while (!ESPConnect.begin(&server)) {
+    ESPConnect.autoConnect("Bacchus", "NOGU2024", 6000000);
+    /*while (!ESPConnect.begin(&server)) {
+      Serial.println("Tentative de connexion WiFi...");
+      delay(1000);  // Attendre 1 seconde avant de réessayer pour éviter une boucle trop rapide
+    }*/
+    if(ESPConnect.begin(&server)){
+      Serial.println("Connected to WiFi");
+      Serial.println("IPAddress: "+WiFi.localIP().toString());
+      initDNS();
+    }else{
+      Serial.println("Failed to connect to WiFi");
+    }
   }
   setup_devices();
   pinMode(LED_PIN, OUTPUT);
@@ -216,13 +229,23 @@ void setup()
       String uuid = "{\"uuid\": \"" + String(my_uuid, HEX) + "\"}";  // UUID en hexadécimal
       request->send(200, "application/json", uuid);
   });
+  server.begin();
 }
 
 String getSensorReadings(void)
 {
   readings = JSONVar();
-  readings["temperature"] = round(dht.readTemperature());
-  readings["humidity"] =  round(dht.readHumidity());
+
+  float tempValue = dht.readTemperature();
+  float humidityValue = dht.readHumidity();
+
+  // Vérifie si l'une des valeurs est NAN ou invalide
+  if (isnan(round(tempValue)) || isnan(round(humidityValue))) {
+    Serial.println("Erreur : la température ou l'humidité n'a pas pu être lue.");
+    return "";  // Retourne une chaîne vide si une lecture est invalide
+  }
+  readings["temperature"] = round(tempValue);
+  readings["humidity"] =  round(humidityValue);
   readings["uuid"] = my_uuid_capteur;
   String jsonString = JSON.stringify(readings);
   Serial.println(jsonString);
@@ -232,6 +255,10 @@ String getSensorReadings(void)
 void send_data(void)
 {
   if ((millis() - lastTime) > timerDelay) {
+    String jsonDataCapteur = getSensorReadings();
+    if (jsonDataCapteur == "") {
+      return;
+    }
     lastTime = millis();
     mqttClient.beginMessage(topic_component);
     mqttClient.print(getSensorReadings());
@@ -248,9 +275,7 @@ void loop()
       mqttClient.subscribe(topic_check_uuid + my_uuid_capteur);
       mqttClient.subscribe(topic_check_uuid + my_uuid_alarm);
     } else {
-      int errorCode = mqttClient.state();
       Serial.print("Failed to reconnect, error state: ");
-      Serial.println(errorCode);
       delay(5000);
     }
   }

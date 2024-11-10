@@ -1,100 +1,126 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const emailInput = document.getElementById('email');
-  const passwordInput = document.getElementById('password');
-  const submitButton = document.getElementById('submit-button') || null;
-  const createAccountButton = document.getElementById('create-account-button') || null;
-  const errorMessage = document.getElementById('error-message');
-  let uuid = '';  // Variable pour stocker l'UUID
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const componentInput = document.getElementById('component');
+    const submitButton = document.getElementById('submit-button') || null;
+    const createAccountButton = document.getElementById('create-account-button') || null;
+    const errorMessage = document.getElementById('error-message');
+    let uuid = '';  // Variable pour stocker le UUID
 
-  // Fetch the UUID from ESP8266
-  function fetchUUID() {
-      alert('Fetching UUID...');  // Alerte avant de récupérer l'UUID
-      return fetch('/getUUID')
-          .then(response => response.json())
-          .then(data => {
-              uuid = parseInt(data.uuid, 16);  // Store the fetched UUID
-              alert('UUID fetched: ' + uuid);  // Alerte après avoir récupéré l'UUID
-          })
-          .catch(error => {
-              alert('Error fetching UUID: ' + error);  // Alerte en cas d'erreur
-              console.error('Error fetching UUID:', error);
-          });
-  }
-  alert(fetchUUID())// Fetch the UUID when the page loads
+    // Fonction pour récupérer le UUID de l'ESP8266
+    function fetchUUID() {
+        return fetch('/getUUID')
+            .then(response => response.json())
+            .then(data => {
+                uuid = parseInt(data.uuid, 16);  // Stocke le UUID récupéré
+                console.log('UUID récupéré : ' + uuid);  // Log après récupération
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération du UUID :', error);
+            });
+    }
 
-  if (submitButton) {
-      // Gestion de la connexion
-      submitButton.addEventListener('click', function(e) {
-          e.preventDefault();
-          const email = emailInput.value.trim();
-          const password = passwordInput.value.trim();
+    // Récupérer le UUID au chargement de la page
+    fetchUUID();
 
-          if (email === '' || password === '') {
-              errorMessage.textContent = 'Veuillez remplir tous les champs.';
-              errorMessage.style.display = 'block';
-              return;
-          }
+    if (submitButton) {
+        // Gérer la connexion
+        submitButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const name = "test";
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            const component = String(uuid);
+            const alarm = component ? component + 'A' : '';  // Génère `alarm` automatiquement
 
-          errorMessage.style.display = 'none';
 
-          alert('Attempting login...');  // Alerte avant d'envoyer la requête de connexion
+            if (email === '' || password === '') {
+                errorMessage.textContent = 'Veuillez remplir tous les champs.';
+                errorMessage.style.display = 'block';
+                return;
+            }
 
-          fetch('/login', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ email, password, uuid })  // Envoi des données
-          })
-          .then(response => response.json())
-          .then(data => {
-              alert('Login successful!');  // Alerte après une connexion réussie
-              console.log('Login response:', data);
-          })
-          .catch(error => {
-              alert('Error during login: ' + error);  // Alerte en cas d'erreur lors de la connexion
-              console.error('Error:', error);
-              errorMessage.textContent = 'Erreur de connexion.';
-              errorMessage.style.display = 'block';
-          });
-      });
-  }
+            errorMessage.style.display = 'none';
+            // Envoie la requête de connexion au serveur local
+            fetch('http://35.180.242.193:3001/dev/account/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                body: JSON.stringify({ name, email, password, component, alarm })  // Inclut `alarm`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Connexion réussie :', data);
+                } else {
+                    errorMessage.textContent = data.message || 'Échec de la connexion.';
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la connexion :', error);
+                errorMessage.textContent = 'Erreur de connexion.';
+                errorMessage.style.display = 'block';
+            });
+        });
+    }
 
-  if (createAccountButton) {
-      // Gestion de la création de compte
-      createAccountButton.addEventListener('click', function(e) {
-          e.preventDefault();
-          const email = emailInput.value.trim();
-          const password = passwordInput.value.trim();
+    if (createAccountButton) {
+        // Gérer la création de compte
+        createAccountButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const name = "test";
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+            const component = String(uuid);
+            const alarm = component ? component + 'A' : '';  // Génère `alarm` automatiquement
 
-          if (email === '' || password === '') {
-              errorMessage.textContent = 'Veuillez remplir tous les champs pour créer un compte.';
-              errorMessage.style.display = 'block';
-              return;
-          }
+            if (email === '' || password === '') {
+                errorMessage.textContent = 'Veuillez remplir tous les champs pour créer un compte.';
+                errorMessage.style.display = 'block';
+                return;
+            }
 
-          errorMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            const signUpData = {
+                name: name,
+                email: email,
+                password: password,
+                component: component || undefined,  // facultatif
+                alarm: alarm || undefined           // facultatif
+            };
 
-          alert('Attempting to create account...');  // Alerte avant d'envoyer la requête de création de compte
+            console.log(signUpData);
 
-          fetch('/create-account', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ email, password, uuid })  // Envoi des données
-          })
-          .then(response => response.json())
-          .then(data => {
-              alert('Account created successfully!');  // Alerte après la création réussie du compte
-              console.log('Account creation response:', data);
-          })
-          .catch(error => {
-              alert('Error during account creation: ' + error);  // Alerte en cas d'erreur lors de la création de compte
-              console.error('Error:', error);
-              errorMessage.textContent = 'Erreur lors de la création du compte.';
-              errorMessage.style.display = 'block';
-          });
-      });
-  }
+            // Envoie la requête de création de compte au serveur local
+            fetch('http://35.180.242.193:3001/dev/account/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(signUpData)  // Inclut `alarm`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erreur du serveur: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    console.log('Compte créé avec succès :', data);
+                } else {
+                    errorMessage.textContent = data.message || 'Échec de la création du compte.';
+                    errorMessage.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la création du compte :', error);
+                errorMessage.textContent = 'Erreur lors de la création du compte. Veuillez réessayer.';
+                errorMessage.style.display = 'block';
+            });
+        });
+    }
 });

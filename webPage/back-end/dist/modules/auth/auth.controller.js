@@ -24,7 +24,7 @@ let AuthController = class AuthController {
         this.authService = authService;
     }
     async login(req, LoginDto) {
-        return await this.authService.login(req.user, LoginDto.uuid);
+        return await this.authService.login(req.user, LoginDto.component, LoginDto.alarm);
     }
     async signUp(signUpDto) {
         return await this.authService.create(signUpDto);

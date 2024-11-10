@@ -15,7 +15,9 @@ export class AlarmsService {
     ) { }
 
     async create(createAlarmDto: CreateAlarmDto, userId: number) {
-        const alarm = this.alarmRepository.findOne({ where: { uuid: createAlarmDto.uuid } })
+        const alarm = await this.alarmRepository.findOne({ where: { uuid: createAlarmDto.uuid } })
+
+        console.log(alarm)
 
         if (alarm) {
             throw new BadRequestException('Alarm already exists')
@@ -54,15 +56,24 @@ export class AlarmsService {
         console.log('---------------- > ', canActivate)
 
         if (canActivate) {
-            console.log(activation ? 'activation' : 'deactivation')
-            alarm.activated = activation
-            if (activation) {
+            if (activation && !alarm.activated) {
                 this.eventEmitter.emit('notify.activation', { userId: alarm.userId, alarmName: alarm.name })
+                const date = new Date()
+                alarm.activations = [...alarm.activations, { activatedAt: date, lasted: 0 }]
+            } else if (!activation && alarm.activated) {
+                const lastActivation = alarm.activations[alarm.activations.length - 1]
+                if (lastActivation) {
+                    const activatedAt = new Date(lastActivation.activatedAt)
+                    const lasted = (Date.now() - activatedAt.getTime()) / 1000
+
+                    lastActivation.lasted = lasted
+                    alarm.activations[alarm.activations.length - 1] = lastActivation
+                }
             }
         }
-
-
-        return await alarm.save()
+        console.log(alarm.activations)
+        
+        return await alarm.update({ activations: alarm.activations, activated: activation })
     }
 
     async forceDeactivation(uuid: string) {

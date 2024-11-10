@@ -3,10 +3,10 @@ const fs = require('fs')
 const utils = require('./utils')
 
 const host = '127.0.0.1'
-const port = '1883'
+const port = '8883'
 const clientId = `mqtt_${Math.random().toString(16).slice(3)}`
 
-const connectUrl = `mqtt://${host}:${port}`
+const connectUrl = `mqtts://${host}:${port}`
 console.log(connectUrl)
 
 const client = mqtt.connect(connectUrl, {

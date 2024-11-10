@@ -1,18 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { OAuth2Client } from "google-auth-library";
 import { Token } from "../../modules/token/token.entity";
 import { TokenService } from "../../modules/token/token.service";
 import { UsersService } from "../../modules/users/users.service";
 
 @Injectable()
 export class IsAutenticated implements CanActivate {
-    private readonly client: OAuth2Client
     constructor(
         private readonly userService: UsersService,
         private readonly tokenService: TokenService
-    ) {
-        this.client = new OAuth2Client('GOOGLE-CLIENT-ID');
-    }
+    ) {}
 
     canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();

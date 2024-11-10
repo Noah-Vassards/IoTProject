@@ -22,8 +22,8 @@ export class AlarmsController {
     }
     
     @Patch(':uuid/activate/:activation')
-    async activate(@Param('uuid') uuid: string, @Param('activation') activation: boolean) {
-        return await this.alarmsService.activate(uuid, activation)
+    async activate(@Param('uuid') uuid: string, @Param('activation') activation: string) {
+        return await this.alarmsService.activate(uuid, activation === 'true' ? true : false)
     }
 
     @Patch(':uuid/forceDeactivation')

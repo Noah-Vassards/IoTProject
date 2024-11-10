@@ -8,9 +8,9 @@ services:
     - "EMQX_NODE_NAME=emqx@node1.emqx.io"
     - "EMQX_CLUSTER__DISCOVERY_STRATEGY=static"
     - "EMQX_CLUSTER__STATIC__SEEDS=[emqx@node1.emqx.io,emqx@node2.emqx.io]"
-    # - "EMQX_SSL_LISTENER__DEFAULT=on"
-    # - "EMQX_SSL_LISTENER__DEFAULT__CERTFILE=/opt/emqx/etc/certs/cert.pem"
-    # - "EMQX_SSL_LISTENER__DEFAULT__KEYFILE=/opt/emqx/etc/certs/key.pem"
+    - "EMQX_SSL_LISTENER__DEFAULT=on"
+    - "EMQX_SSL_LISTENER__DEFAULT__CERTFILE=/opt/emqx/etc/certs/cert.pem"
+    - "EMQX_SSL_LISTENER__DEFAULT__KEYFILE=/opt/emqx/etc/certs/key.pem"
     healthcheck:
       test: ["CMD", "/opt/emqx/bin/emqx", "ctl", "status"]
       interval: 5s
@@ -21,7 +21,7 @@ services:
         aliases:
         - node1.emqx.io
     ports:
-      - 1883:1883
+      # - 1883:1883
       - 8083:8083
       - 8084:8084
       - 8883:8883

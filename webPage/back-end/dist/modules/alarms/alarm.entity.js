@@ -55,6 +55,14 @@ __decorate([
 ], Alarm.prototype, "activated", void 0);
 __decorate([
     (0, sequelize_typescript_1.Column)({
+        type: sequelize_typescript_1.DataType.ARRAY(sequelize_typescript_1.DataType.JSON),
+        allowNull: false,
+        defaultValue: []
+    }),
+    __metadata("design:type", Array)
+], Alarm.prototype, "activations", void 0);
+__decorate([
+    (0, sequelize_typescript_1.Column)({
         type: sequelize_typescript_1.DataType.DATE,
         allowNull: true
     }),

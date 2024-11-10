@@ -5,7 +5,7 @@ const app_module_1 = require("./app.module");
 const validate_pipes_1 = require("./core/pipes/validate.pipes");
 const cookieParser = require("cookie-parser");
 const database_config_1 = require("./core/database/database.config");
-const port = 3001;
+const port = process.env.PORT;
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { cors: true });
     const prefix = database_config_1.databaseConfig.urlDatabase;

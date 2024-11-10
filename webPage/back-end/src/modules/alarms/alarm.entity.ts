@@ -39,6 +39,13 @@ export class Alarm extends Model<Alarm> {
     activated: boolean
 
     @Column({
+        type: DataType.ARRAY(DataType.JSON),
+        allowNull: false,
+        defaultValue: []
+    })
+    activations: {activatedAt: Date, lasted: number}[]
+
+    @Column({
         type: DataType.DATE,
         allowNull: true
     })

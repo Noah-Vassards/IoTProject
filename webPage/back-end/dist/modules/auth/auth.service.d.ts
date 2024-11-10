@@ -27,7 +27,7 @@ export declare class AuthService {
         sequelize: import("sequelize").Sequelize;
         _model: import("sequelize").Model<User, User>;
     }>;
-    login(user: User, uuid: string): Promise<any>;
+    login(user: User, component: string, alarm: string): Promise<any>;
     create(signUpDto: SignUpDto): Promise<any>;
     private generateToken;
     private hashPassword;

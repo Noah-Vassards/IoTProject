@@ -15,7 +15,9 @@ export class AlarmsService {
     ) { }
 
     async create(createAlarmDto: CreateAlarmDto, userId: number) {
-        const alarm = this.alarmRepository.findOne({ where: { uuid: createAlarmDto.uuid } })
+        const alarm = await this.alarmRepository.findOne({ where: { uuid: createAlarmDto.uuid } })
+
+        console.log(alarm)
 
         if (alarm) {
             throw new BadRequestException('Alarm already exists')

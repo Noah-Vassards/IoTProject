@@ -55,13 +55,13 @@ unsigned long lastTimeAlarm = 0;
 unsigned long timerDelay = 15000;
 DHT dht(5, DHT11); // pin D1
 
-const char topic_activate_alarm[] = "/activate/uuid8alr1";
-const char topic_deactivate_alarm[] = "/deactivate/uuid8alr1";
 #define LED_PIN 4 // pin D2
 #define FAN_PIN 2 // pin D4
 uint32_t my_uuid = ESP.getChipId();
 String my_uuid_capteur = String(my_uuid); // Convertir l'ID en String
 String my_uuid_alarm = my_uuid_capteur + "A"; // Concaténer "A" à l'UUID du capteur
+String topic_activate_alarm = "/activate/" + my_uuid_alarm;
+String topic_deactivate_alarm = "/deactivate/" + my_uuid_alarm;
 bool set_user = true;
 
 String validate()
@@ -117,10 +117,11 @@ void messages(int messageSize)
       Serial.println("Erreur lors de l'analyse du message JSON");
       return;
     }
-
     if (topic == topic_activate_alarm) {
+      Serial.println("Activate Alarm");
       activate_alarm();
-    } else if (topic ==topic_deactivate_alarm) {
+    } else if (topic == topic_deactivate_alarm) {
+      Serial.println("Deactivate Alarm");
       deactivate_alarm();
     }
     else if (topic == topic_check_uuid + my_uuid_capteur) {
@@ -181,6 +182,10 @@ void setup_devices(void) {
   if (!mqttClient.connect(broker, port)) {
      Serial.println("Failed to connect to MQTT");
   }
+  Serial.print("topic_activate_alarm:");
+  Serial.println(topic_activate_alarm);
+  Serial.print("topic_deactivate_alarm:");
+  Serial.println(topic_deactivate_alarm);
   mqttClient.onMessage(messages);
   mqttClient.subscribe(topic_activate_alarm);
   mqttClient.subscribe(topic_deactivate_alarm);  
@@ -241,8 +246,7 @@ String getSensorReadings(void)
 
   // Vérifie si l'une des valeurs est NAN ou invalide
   if (isnan(round(tempValue)) || isnan(round(humidityValue))) {
-    Serial.println("Erreur : la température ou l'humidité n'a pas pu être lue.");
-    return "";  // Retourne une chaîne vide si une lecture est invalide
+    return "";
   }
   readings["temperature"] = round(tempValue);
   readings["humidity"] =  round(humidityValue);
@@ -269,6 +273,7 @@ void send_data(void)
 void loop()
 {
   MDNS.update();
+  mqttClient.poll();
   if (!mqttClient.connected()) {
     if (mqttClient.connect(broker, port)) {
       Serial.println("Reconnected to MQTT broker");
